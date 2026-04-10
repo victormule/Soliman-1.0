@@ -317,7 +317,7 @@ export class Chapitre2Scene extends Scene {
     this._phase = 'outro';
 
     // Texte affiché pendant l'outro
-    const QUOTE_TEXT = `Ce qui a été le plus difficile à comprendre ou à aborder ?\n\nCe qui m'a le plus dérangé, c'est l'ambiguïté de son geste. Est-ce qu'il est un assassin ? un résistant ? un fanatique ? un héros ? ce n'est pas facile de trancher. On se rend vite compte que ça dépend du point de vue.\n\nEt comme il n'a pas laissé de traces écrites personnelles, on doit lire entre les lignes des récits officiels. C'est frustrant de ne pas vraiment savoir qui il était, ce qu'il pensait, ce qu'il ressentait. Mais c'est aussi ce qui rend cette recherche passionnante.`;
+    const QUOTE_TEXT = `\nCe qui a été le plus difficile à comprendre ou à aborder ?\n\nCe qui m'a le plus dérangé, c'est l'ambiguïté de son geste. Est-ce qu'il est un assassin ? un résistant ? un fanatique ? un héros ? ce n'est pas facile de trancher. On se rend vite compte que ça dépend du point de vue.\n\nEt comme il n'a pas laissé de traces écrites personnelles, on doit lire entre les lignes des récits officiels. C'est frustrant de ne pas vraiment savoir qui il était, ce qu'il pensait, ce qu'il ressentait. Mais c'est aussi ce qui rend cette recherche passionnante.`;
 
     // Si le player est ouvert, on force sa fermeture avant la sortie
     if (this.player?.active) this.player._forceClose();
