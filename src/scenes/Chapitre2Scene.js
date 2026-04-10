@@ -1,8 +1,9 @@
 import { Scene }               from '../core/Scene.js';
 import { bus }                 from '../core/EventBus.js';
+import { runSkippableQuoteSequence } from '../sequences/QuoteSequence.js';
 import { ArrowCollaboration }  from '../ui/ArrowCollaboration.js';
 import { Chapter2LightSystem } from '../systems/Chapter2LightSystem.js';
-import { runSkippableQuoteSequence } from '../sequences/QuoteSequence.js';
+
 /**
  * Scène "Chapitre 2"
  * -----------------------------------------------------------------------------
