@@ -112,14 +112,14 @@ export async function runSkippableQuoteSequence({
     paddingXRatio: 0.25,
     paddingYRatio: 0.10,
     paddingXMinPx: 25,
-    paddingXMaxPx: 250,
+    paddingXMaxPx: 1000,
     paddingYMinPx: 10,
     paddingYMaxPx: 200,
 
     // Typographie responsive pilotée par min(vW, vH)
     fontScale: 2.75,
     fontMinPx: 12,
-    fontMaxPx: 42,
+    fontMaxPx: 52,
 
     // Rendu typo
     lineHeight: 1.84,
