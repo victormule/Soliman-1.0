@@ -1,35 +1,40 @@
 /**
  * QuoteSequence.js
  * -----------------------------------------------------------------------------
- * Séquence de citation typée — version direction artistique.
+ * Séquence autonome de citation typée pour les chapitres.
  *
  * INTENTION
  * -----------------------------------------------------------------------------
- * Ce module ne cherche pas à simuler une machine à écrire.
- * Il cherche à produire une lecture incarnée :
- * - une apparition lente et retenue,
- * - des respirations sur la ponctuation,
- * - un rythme légèrement organique,
- * - une mise en page noble, centrée, stable et lisible,
- * - un texte qui existe comme une présence visuelle.
+ * Ce module est conçu comme un espace narratif autonome :
+ * - la scène appelle simplement la séquence,
+ * - tout le comportement du texte vit ici,
+ * - on peut retravailler librement la sensation du typing sans toucher
+ *   à Chapitre2Scene.js.
  *
- * CONTRAT
+ * OBJECTIFS
+ * -----------------------------------------------------------------------------
+ * - Typing sensible, organique, non mécanique
+ * - Bloc texte centré et noble
+ * - Justification gauche / droite
+ * - Responsive réel selon la taille de fenêtre
+ * - Marges proportionnelles pour ne jamais sortir du cadre
+ * - Skip propre
+ * - Intégration stable avec le fondu final du chapitre
+ *
+ * CONTRAT AVEC Chapitre2Scene
  * -----------------------------------------------------------------------------
  * La scène appelle :
  *
  *   await runSkippableQuoteSequence({...})
  *
- * Et n'a pas besoin de connaître le détail du typing.
+ * Puis récupère la main quand :
+ * - la quote est terminée naturellement,
+ * - ou qu'elle a été skippée.
  *
- * CE MODULE GÈRE
+ * IMPORTANT
  * -----------------------------------------------------------------------------
- * - le layout du texte,
- * - la typographie,
- * - le typing expressif,
- * - le curseur,
- * - le resize,
- * - le skip,
- * - la résolution fin naturelle / skip.
+ * Le conteneur #chapter-quote reste celui contrôlé par la scène pour les fades
+ * finaux. Ici, on ne pilote que son contenu interne.
  */
 
 export async function runSkippableQuoteSequence({
@@ -64,47 +69,61 @@ export async function runSkippableQuoteSequence({
   /**
    * CONFIG CRÉATIVE
    * ---------------------------------------------------------------------------
-   * Tout le caractère du texte vit ici.
-   * C'est la zone que tu peux retravailler librement.
+   * Toute la direction artistique du texte est centralisée ici.
+   * C'est cet objet qu'on peut faire évoluer ensuite pour affiner :
+   * - rythme,
+   * - respiration,
+   * - largeur,
+   * - placement,
+   * - densité,
+   * - présence.
    */
   const CFG = {
-    // Tempo principal
+    // ── Typing / tempo ────────────────────────────────────────────
     baseDelay: charDelay,
-    introHold: 240,
+    introHold: 220,
 
-    // Respirations
-    commaPause: 80,
-    semicolonPause: 135,
-    colonPause: 155,
+    // Respirations de ponctuation
+    commaPause: 75,
+    semicolonPause: 125,
+    colonPause: 150,
     dashPause: 170,
-    sentencePause: 255,
+    sentencePause: 245,
     lineBreakPause: 170,
     paragraphPause: 560,
 
-    // Nuances organiques
-    humanizeRatio: 0.24,
+    // Organicité
+    humanizeRatio: 0.22,
     softWordRelease: 12,
-    longWordPause: 20,
-    emphasisPause: 55,
+    longWordPause: 18,
+    emphasisPause: 50,
 
-    // Skip / sortie
+    // Séquence
     skipDelay,
     afterTypingDelay,
 
-    // Layout
-    maxWidthPx: 900,
-    sidePaddingVW: 9,
-    topPaddingVH: 9,
-    bottomPaddingVH: 10,
+    // ── Layout responsive proportionnel ───────────────────────────
+    // Largeur de colonne pilotée par la largeur de fenêtre, puis bornée
+    columnRatio: 0.68,
+    columnMinPx: 260,
+    columnMaxPx: 920,
 
-    // Typographie responsive
-    fontVW: 1.42,
-    fontMinPx: 21,
-    fontMaxPx: 31,
+    // Marges proportionnelles et bornées
+    paddingXRatio: 0.25,
+    paddingYRatio: 0.10,
+    paddingXMinPx: 25,
+    paddingXMaxPx: 250,
+    paddingYMinPx: 10,
+    paddingYMaxPx: 200,
+
+    // Typographie responsive pilotée par min(vW, vH)
+    fontScale: 2.75,
+    fontMinPx: 12,
+    fontMaxPx: 42,
+
+    // Rendu typo
     lineHeight: 1.84,
     letterSpacingEm: 0.008,
-
-    // Couleur / présence
     textColor: 'rgba(239, 232, 220, 0.96)',
     cursorColor: 'rgba(239, 232, 220, 0.82)',
     shadow:
@@ -113,7 +132,7 @@ export async function runSkippableQuoteSequence({
     // Curseur
     cursorChar: '▍',
 
-    // Apparition
+    // Classe de visibilité utilisée par le CSS global de la scène
     visibleClass: 'visible',
   };
 
@@ -133,6 +152,7 @@ export async function runSkippableQuoteSequence({
   };
 
   window.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('orientationchange', onResize, { passive: true });
   resizeBound = true;
 
   rootEl.classList.add(CFG.visibleClass);
@@ -144,6 +164,7 @@ export async function runSkippableQuoteSequence({
 
     if (resizeBound) {
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
       resizeBound = false;
     }
   };
@@ -182,6 +203,8 @@ export async function runSkippableQuoteSequence({
     throw err;
   });
 
+  // Le bouton skip n'apparaît qu'après un certain délai pour laisser respirer
+  // l'entrée de la citation.
   await wait(CFG.skipDelay);
 
   if (!isStillValid()) {
@@ -206,8 +229,8 @@ export async function runSkippableQuoteSequence({
     settled = true;
     runToken = Symbol('quote-sequence-skipped');
 
-    // En cas de skip, le texte complet reste visible :
-    // le chapitre pourra ensuite le faire fondre proprement.
+    // En cas de skip, on force l'affichage du texte complet.
+    // Le chapitre pourra ensuite faire son fondu sur un état final propre.
     refs.body.textContent = text;
     refs.cursor.style.opacity = '1';
 
@@ -243,8 +266,14 @@ export async function runSkippableQuoteSequence({
  * ========================================================================== */
 
 /**
- * Construit le DOM interne du bloc quote.
- * Le conteneur #chapter-quote reste contrôlé par la scène pour les fades globaux.
+ * Construit le DOM interne de la quote.
+ *
+ * Structure :
+ * - stage  : surface centrée sur toute la zone disponible
+ * - column : colonne de lecture bornée
+ * - text   : bloc typographique principal
+ * - body   : texte progressif
+ * - cursor : curseur clignotant
  */
 function buildQuoteDOM(rootEl, cfg) {
   rootEl.innerHTML = `
@@ -271,40 +300,63 @@ function buildQuoteDOM(rootEl, cfg) {
 }
 
 /**
- * Applique la mise en page responsive.
+ * Applique une mise en page réellement proportionnelle à la fenêtre.
  *
- * Direction artistique :
- * - le bloc est réellement centré dans l'écran,
- * - la colonne garde une largeur littéraire,
- * - le texte est justifié,
- * - la taille reste fluide mais contenue,
- * - la lecture doit respirer.
+ * Principes :
+ * - taille de police basée sur min(vW, vH) pour une vraie stabilité responsive
+ * - largeur de colonne basée sur vW, puis bornée
+ * - marges proportionnelles horizontalement et verticalement
+ * - centrage réel du bloc dans la surface
+ * - protection contre débordement
  */
 function applyLayout(rootEl, refs, cfg) {
-  const vW = Math.max(window.innerWidth, 600);
+  const vW = Math.max(window.innerWidth, 320);
+  const vH = Math.max(window.innerHeight, 320);
+  const vMin = Math.min(vW, vH);
 
   const fontPx = clamp(
-    Math.round(vW * cfg.fontVW / 100),
+    Math.round(vMin * cfg.fontScale / 100),
     cfg.fontMinPx,
     cfg.fontMaxPx
+  );
+
+  const columnPx = clamp(
+    Math.round(vW * cfg.columnRatio),
+    cfg.columnMinPx,
+    cfg.columnMaxPx
+  );
+
+  const padX = clamp(
+    Math.round(vW * cfg.paddingXRatio),
+    cfg.paddingXMinPx,
+    cfg.paddingXMaxPx
+  );
+
+  const padY = clamp(
+    Math.round(vH * cfg.paddingYRatio),
+    cfg.paddingYMinPx,
+    cfg.paddingYMaxPx
   );
 
   rootEl.style.display = 'flex';
   rootEl.style.alignItems = 'center';
   rootEl.style.justifyContent = 'center';
-  rootEl.style.padding =
-    `${cfg.topPaddingVH}vh ${cfg.sidePaddingVW}vw ${cfg.bottomPaddingVH}vh`;
   rootEl.style.boxSizing = 'border-box';
+  rootEl.style.width = '100%';
+  rootEl.style.height = '100%';
+  rootEl.style.padding = `${padY}px ${padX}px`;
 
   refs.stage.style.width = '100%';
+  refs.stage.style.height = '100%';
   refs.stage.style.display = 'flex';
-  refs.stage.style.justifyContent = 'center';
   refs.stage.style.alignItems = 'center';
+  refs.stage.style.justifyContent = 'center';
 
-  refs.column.style.width = `min(${cfg.maxWidthPx}px, 100%)`;
+  refs.column.style.width = `${columnPx}px`;
+  refs.column.style.maxWidth = '100%';
 
-  refs.text.style.position = 'relative';
   refs.text.style.width = '100%';
+  refs.text.style.position = 'relative';
   refs.text.style.color = cfg.textColor;
   refs.text.style.fontFamily = `'Cormorant Garamond', Georgia, serif`;
   refs.text.style.fontSize = `${fontPx}px`;
@@ -313,8 +365,8 @@ function applyLayout(rootEl, refs, cfg) {
   refs.text.style.fontWeight = '300';
   refs.text.style.textAlign = 'justify';
   refs.text.style.textJustify = 'inter-word';
-  refs.text.style.textWrap = 'pretty';
   refs.text.style.whiteSpace = 'pre-wrap';
+  refs.text.style.textWrap = 'pretty';
   refs.text.style.hyphens = 'auto';
   refs.text.style.wordBreak = 'normal';
   refs.text.style.overflowWrap = 'break-word';
@@ -341,11 +393,11 @@ function applyLayout(rootEl, refs, cfg) {
  * Lance le typing principal.
  *
  * Philosophie :
- * - pas mécanique,
- * - pas trop régulier,
- * - sensible aux ponctuations,
- * - légèrement respiré,
- * - plus lent sur les articulations fortes du texte.
+ * - présence douce au départ,
+ * - rythme vivant,
+ * - pauses sur la ponctuation,
+ * - fins de phrase plus graves,
+ * - paragraphes plus contemplatifs.
  */
 async function playExpressiveTyping({
   text,
@@ -372,7 +424,6 @@ async function playExpressiveTyping({
     output += ch;
     refs.body.textContent = output;
 
-    // Conserve le mot en cours pour enrichir légèrement le tempo
     if (/\S/.test(ch) && ch !== '\n') {
       currentWord += ch;
     } else {
@@ -396,12 +447,10 @@ async function playExpressiveTyping({
 /**
  * Calcule le délai expressif d'un caractère.
  *
- * Ce calcul produit un rythme plus humain :
- * - base stable,
- * - variation légère,
- * - pauses ponctuation,
- * - respiration fin de mot,
- * - respiration plus grave en fin de phrase / paragraphe.
+ * Effets recherchés :
+ * - éviter l'effet robotique,
+ * - faire sentir les articulations du langage,
+ * - créer un léger souffle émotionnel.
  */
 function getExpressiveDelay({ ch, prev, next, currentWord, cfg }) {
   let delay = cfg.baseDelay;
@@ -410,32 +459,32 @@ function getExpressiveDelay({ ch, prev, next, currentWord, cfg }) {
   const variance = delay * cfg.humanizeRatio;
   delay += randomBetween(-variance, variance);
 
-  // Ponctuation faible / moyenne / forte
+  // Ponctuation
   if (ch === ',') delay += cfg.commaPause;
   else if (ch === ';') delay += cfg.semicolonPause;
   else if (ch === ':') delay += cfg.colonPause;
   else if (ch === '—') delay += cfg.dashPause;
   else if (ch === '.' || ch === '!' || ch === '?') delay += cfg.sentencePause;
 
-  // Retours ligne / paragraphes
+  // Retours de ligne / paragraphes
   if (ch === '\n' && prev === '\n') {
     delay += cfg.paragraphPause;
   } else if (ch === '\n') {
     delay += cfg.lineBreakPause;
   }
 
-  // Très légère détente en fin de mot
+  // Légère détente en fin de mot
   if (ch === ' ' && currentWord.length > 0) {
     delay += cfg.softWordRelease;
     if (currentWord.length >= 8) delay += cfg.longWordPause;
   }
 
-  // Marque les articulations sensibles du texte
+  // Accents d'expression sur certains signes
   if (ch === '«' || ch === '»' || ch === '(' || ch === ')') {
     delay += cfg.emphasisPause;
   }
 
-  // Reprise après ponctuation lourde : espace + majuscule
+  // Reprise après ponctuation forte
   if (
     ch === ' ' &&
     prev &&
