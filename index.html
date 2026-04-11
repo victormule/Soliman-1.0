@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vitrine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Curseur hors de #app — position:fixed relatif au vrai viewport -->
+<div id="cursor"></div>
+
+<div id="app">
+
+<div class="bg-layer" id="bg-vitrine"></div>
+<div class="bg-layer" id="bg-phrenologie"></div>
+<div class="bg-layer" id="bg-collaboration"></div>
+<div class="bg-layer" id="bg-chapitre2"></div>
+<div id="veil"></div>
+<div id="chapter-quote" aria-hidden="true"></div>
+<canvas id="overlay-canvas"></canvas>
+
+<div id="site-title"></div>
+<div id="chapitre-subtitle"></div>
+
+<!-- ══ Overlays images chapitre 2 ══ -->
+<div id="hotspot-layer"></div>
+<div class="hotspot-img" id="himg-1" style="background-image:url('images/chapitre3-1.png')"></div>
+<div class="hotspot-img" id="himg-2" style="background-image:url('images/chapitre3-2.png')"></div>
+<div class="hotspot-img" id="himg-3" style="background-image:url('images/chapitre3-3.png')"></div>
+<div class="hotspot-img" id="himg-4" style="background-image:url('images/chapitre3-4.png')"></div>
+<div class="hotspot-img" id="himg-5" style="background-image:url('images/chapitre3-5.png')"></div>
+<div class="hotspot-img" id="himg-6" style="background-image:url('images/chapitre3-6.png')"></div>
+<div class="hotspot-img" id="himg-7" style="background-image:url('images/chapitre3-7.png')"></div>
+<div class="hotspot-img" id="himg-8" style="background-image:url('images/chapitre3-8.png')"></div>
+<div class="hotspot-img" id="himg-9" style="background-image:url('images/chapitre3-9.png')"></div>
+
+<!-- Flèche : SVG injecté dynamiquement à chaque showArrow() -->
+<div id="nav-arrow" class="pos-bottom"></div>
+
+<div id="doc-btns"></div>
+<div id="roman-circles"></div>
+<div id="hover-title"></div>
+<div id="nav-bar"></div>
+<div id="skip-btn"></div>
+<div id="media-player"></div>
+
+<div id="fs-btn" title="Plein écran">
+  <svg class="icon-expand" viewBox="0 0 24 24" fill="none"
+       stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+    <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+  </svg>
+  <svg class="icon-collapse" viewBox="0 0 24 24" fill="none"
+       stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
+    <line x1="10" y1="14" x2="3" y2="21"/><line x1="14" y1="10" x2="21" y2="3"/>
+  </svg>
+</div>
+
+<div id="start-screen">
+
+  <!-- Grille décorative Bauhaus -->
+  <div class="ss-grid" aria-hidden="true">
+    <div class="ss-grid-line ss-grid-line--h ss-grid-line--top"></div>
+    <div class="ss-grid-line ss-grid-line--h ss-grid-line--bottom"></div>
+    <div class="ss-grid-line ss-grid-line--v ss-grid-line--left"></div>
+    <div class="ss-grid-line ss-grid-line--v ss-grid-line--right"></div>
+    <div class="ss-grid-accent" aria-hidden="true"></div>
+  </div>
+
+  <div class="ss-inner">
+
+    <!-- Bloc supérieur : label projet -->
+    <div class="ss-eyebrow">Projet de recherche</div>
+
+    <!-- Séparateur horizontal -->
+    <div class="ss-rule" aria-hidden="true"></div>
+
+    <!-- Titre principal -->
+    <div class="ss-title">Soleyman <span style="white-space:nowrap">El-Halaby</span></div>
+
+    <!-- Corps -->
+    <div class="ss-body">
+      Ce site propose une expérience sonore.<br>
+      L'usage d'un casque est recommandé.
+    </div>
+
+    <!-- Séparateur bas -->
+    <div class="ss-rule ss-rule--short" aria-hidden="true"></div>
+
+    <!-- Crédits -->
+    <div class="ss-credits">
+      <span class="ss-credits__sep" aria-hidden="true">—</span>
+      <span class="ss-credits__orgs">Abounaddara · CNRS · 2026</span>
+    </div>
+
+    <!-- CTA -->
+    <div class="ss-cta">Cliquez pour commencer</div>
+
+  </div>
+
+</div>
+
+</div><!-- /#app -->
+
+<!-- ══ Scripts ══
+     Ordre impératif : config.js en premier (définit CONFIG),
+     puis main.js (l'utilise) -->
+<script src="config.js"></script>
+<script type="module" src="src/app.js"></script>
+
+</body>
+</html>
