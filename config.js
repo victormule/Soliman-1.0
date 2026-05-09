@@ -49,7 +49,7 @@ window.CONFIG = {
 
     torch: {
       size:              0.22,   // Fraction de min(W,H) — torche intime, centrée sur le sujet
-      grow_duration:     6000,
+      grow_duration:     10000,
       fade_out_duration: 1500,
     },
 
