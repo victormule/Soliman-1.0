@@ -202,7 +202,7 @@ window.CONFIG = {
 
     timing: {
       // Délai entre l'apparition de l'image chapitre2.png et le démarrage du son S-phrenologie.mp3
-      phren_sound_delay:  5000,   // ms depuis l'ouverture du voile
+      phren_sound_delay:  10000,   // ms depuis l'ouverture du voile
 
       // Délai d'apparition du bouton "Passer" PENDANT S-phrenologie.mp3
       // 0 = apparaît dès le début du son, 5000 = après 5s de son
