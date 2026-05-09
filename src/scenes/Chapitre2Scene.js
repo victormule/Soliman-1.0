@@ -345,7 +345,7 @@ export class Chapitre2Scene extends Scene {
     this.bgMgr.blackout();
 
     // Lance un silence de fond en boucle pendant toute la lecture / typing
-    this.audio.startSilenceLoop();
+  
 
     /**
      * Séquence de sortie finale commune.
@@ -383,7 +383,6 @@ export class Chapitre2Scene extends Scene {
       await this._rawWait(400);
 
       // 5) Sortie audio + ouverture vers la scène suivante
-      this.audio.stopSilenceLoop(1800);
       await this.transition.fadeVeil(0, 280);
       bus.emit('navigate', { to: 'collaboration', from: 'chapitre2' });
     };
