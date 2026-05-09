@@ -231,7 +231,7 @@ window.CONFIG = {
    ══════════════════════════════════════════════════════════════════ */
 
   AUDIO: {
-    musee_vol:        1.0,
+    musee_vol:        1.2,
     fadeDuration:    3500,   // Fondu initial musée (ms)
     musee_fade:      2500,   // Fondu entre scènes (ms)
 
@@ -239,7 +239,7 @@ window.CONFIG = {
     phren_fade_out:  2200,
     phren_intro_delay: 1800,
 
-    sanza_vol:       0.65,
+    sanza_vol:       0.55,
     sanza_fade_in:   2000,
     sanza_fade_out:  1200,
 
@@ -247,7 +247,7 @@ window.CONFIG = {
     silence_fade_in: 1200,
     silence_fade_out: 1800,
 
-    collab_vol:      0.02,
+    collab_vol:      0.1,
     collab_fade_in:  2500,
     collab_fade_out: 2000,
   },
