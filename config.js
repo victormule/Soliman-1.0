@@ -189,10 +189,10 @@ window.CONFIG = {
     light: {
       // Phase intro (chapitre2.png) : lumière large et douce
       intro_frac:       0.95,   // Fraction min(W,H) — rayon initial
-      intro_duration:   3200,   // Durée allumage depuis 0 (ms)
+      intro_duration:   6200,   // Durée allumage depuis 0 (ms)
 
       // Phase interactive (chapitre2base.png + hotspots)
-      interactive_frac: 1,   // Fraction min(W,H) — rayon interactif
+      interactive_frac: 1.5   // Fraction min(W,H) — rayon interactif
       trans_duration:   2000,   // Durée transition intro → interactif (ms)
 
       // Pendant lecture media : lumière réduite
