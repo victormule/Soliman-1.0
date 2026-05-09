@@ -57,6 +57,11 @@ export class Chapter2LightSystem {
   show() {
     this.visible = true;
     if (!this.canvas) return;
+    // Garantit que le canvas est aux bonnes dimensions au moment de l'affichage.
+    // Sans cet appel, si show() est appelé avant le premier resize() post-layout,
+    // le canvas conserve ses dimensions par défaut (300×150) et le gradient
+    // est rendu sur une surface tronquée — les paramètres de config sont ignorés.
+    this.resize();
     this.canvas.style.display = 'block';
     this.canvas.style.opacity = '1';
   }
