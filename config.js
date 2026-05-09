@@ -160,8 +160,8 @@ window.CONFIG = {
 
       // Contenu
       labels:       ['I', 'II', 'III', 'IV', 'V'],
-      hover_titles: ['Chapitre 1', 'Pourquoi Soliman el-Halabi aurait-il tué le général Kléber ?', 'Chapitre 3', 'Chapitre 4', 'Chapitre 5'],
-      actions:      [null, 'chapitre2', null, null, null],
+      hover_titles: ['Pourquoi Soliman el-Halabi aurait-il tué le général Kléber ?', 'L’héritage colonial du musée', 'Chapitre 3', 'Chapitre 4', 'Chapitre 5'],
+      actions:      ['chapitre2', null, null, null, null],
     },
 
     audio: {
@@ -247,7 +247,7 @@ window.CONFIG = {
     silence_fade_in: 1200,
     silence_fade_out: 1800,
 
-    collab_vol:      1.0,
+    collab_vol:      0.2,
     collab_fade_in:  2500,
     collab_fade_out: 2000,
   },
