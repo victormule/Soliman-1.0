@@ -247,7 +247,7 @@ window.CONFIG = {
     silence_fade_in: 1200,
     silence_fade_out: 1800,
 
-    collab_vol:      0.1,
+    collab_vol:      0.4,
     collab_fade_in:  2500,
     collab_fade_out: 2000,
   },
