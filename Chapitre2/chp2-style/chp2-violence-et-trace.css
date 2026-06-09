@@ -123,7 +123,7 @@ body.cartel-open #chp2-cursor { display: none !important; }
     aspect-ratio: 900 / 1024;
     position: relative;
     z-index: var(--z-label);
-    background: url('../chp2-images/cartel.png') center / contain no-repeat;
+    background: url('../chp2-images/cartel.webp') center / contain no-repeat;
     /*background-size: cover;*/
     /*background-position: center;*/
      border-radius: 2px 3px 2px 4px / 3px 2px 4px 2px;
