@@ -655,7 +655,7 @@ function getAudioEl() {
    ============================================================ */
 const _invCfg    = (window.CONFIG && window.CONFIG.CHAPITRE2 && window.CONFIG.CHAPITRE2.invibilisation) || {};
 const FLUTE_SRC  = 'Chapitre2/chp2-medias/flute.mp3';
-const FLUTE_VOL  = (_invCfg.fluteVol    != null) ? _invCfg.fluteVol    : 0.30;  // volume cible (config)
+const FLUTE_VOL  = (_invCfg.fluteVol    != null) ? _invCfg.fluteVol    : 0.15;  // volume cible (config)
 const FLUTE_FADE = (_invCfg.fluteFadeMs != null) ? _invCfg.fluteFadeMs : 1500;  // durée des fondus (ms)
 const EXIT_FADE  = (_invCfg.exitFadeMs  != null) ? _invCfg.exitFadeMs  : 2500;  // extinction de sortie (ms)
 let _fluteEl = null;
