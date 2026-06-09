@@ -202,7 +202,7 @@ window.CONFIG = {
     //   staggerMs      : décalage d'allumage entre crânes (cascade) (ms).
     //   returnMs       : durée de rallumage au retour d'une sous-partie (ms).
     light: {
-      craneFinalFrac: 0.20,
+      craneFinalFrac: 0.30,
       igniteMs:       5000,
       igniteDelay:    2600,
       staggerMs:      260,
