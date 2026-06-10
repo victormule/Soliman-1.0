@@ -16,7 +16,7 @@
  *   chp2-medias/Démesure.mp4
  *   chp2-medias/L'âme-noire.mp4
  *   chp2-medias/Au-tribunal.mp4
- *   chp2-medias/temoignage-guillaume.wav
+ *   chp2-medias/temoignage-guillaume.mp3
  *   chp2-medias/temoignage-guillaume.vtt
  */
 
