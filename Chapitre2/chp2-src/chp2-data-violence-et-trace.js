@@ -27,7 +27,7 @@ export const slides = [
     {
         dir: "left",
         type: "video",
-        src: "Chapitre2/chp2-medias/l-Abribus.mp4",
+        src: "Chapitre2/chp2-medias/l-abribus.mp4",
         thumb: "Chapitre2/chp2-images/l-Abribus.png",
         caption: "L'Abribus",
         tilt: -8,
