@@ -160,7 +160,7 @@ window.CONFIG = {
 
       // Contenu
       labels:       ['I', 'II', 'III', 'IV', 'V'],
-      hover_titles: ['Pourquoi Soliman el-Halabi aurait-il tué le général Kléber ?', 'L’héritage colonial du musée', 'Chapitre 3', 'Chapitre 4', 'Chapitre 5'],
+      hover_titles: ['Les interpétations du geste de Soliman al-Halabi', 'L’héritage colonial du musée', 'Chapitre 3', 'Chapitre 4', 'Chapitre 5'],
       actions:      ['chapitre1', 'chapitre2', null, null, null],
     },
 
@@ -226,7 +226,7 @@ window.CONFIG = {
    ══════════════════════════════════════════════════════════════════ */
 
   CHAPITRE1: {
-    subtitle: 'Pourquoi Soliman el-Halabi aurait-il tué le général Kléber ?',
+    subtitle: 'Les interprétations du geste de Soliman al-Halabi',
     debug:    false,
 
     /* ── Chapter1LightSystem — lumière fixe centrée ──────────────
