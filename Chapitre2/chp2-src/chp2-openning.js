@@ -380,7 +380,7 @@ var SKULLS = [
     id:     "136",
     box:    { x0: 0.12, y0: 0.220, x1: 0.300, y1: 0.700 },
     num:    "136",
-    label:  "Invisibilisation de la violence muséale des collections",
+    label:  "Taire le passé",
     url:    null,
     action: "invibilisation",
     active: false,
