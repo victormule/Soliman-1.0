@@ -610,7 +610,7 @@ export class Chapitre2Scene extends Scene {
           <div class="text-content">
             <span class="text-label">Témoignage</span>
             <p id="text-quote" class="text-quote">« ça m'a beaucoup questionnée sur la manière dont on construit les récits historiques&nbsp;: qui décide de ce que l'on montre, de ce que l'on cache, et pourquoi&nbsp;? »</p>
-              <div class="text-label">— Étudiante, atelier de médiation, 2025</div>
+              <div class="text-label"><br>— A., lycéen</div>
           </div>
         </div>
       </div>
