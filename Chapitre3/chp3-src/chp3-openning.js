@@ -943,7 +943,7 @@ export function leaveToCollaboration() { return _ctx?.leaveToCollaboration?.(); 
                   <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="g"/>
                   <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter></defs>`;
-            document.body.appendChild(svg);
+            container.appendChild(svg);
         }
 
         function glEnsureDOM() {
@@ -1864,7 +1864,7 @@ export function leaveToCollaboration() { return _ctx?.leaveToCollaboration?.(); 
                 <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="b"/>
                 <feMerge><feMergeNode in="b"/><feMergeNode in="a"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter></defs>`;
-            document.body.appendChild(glowSvg);
+            container.appendChild(glowSvg);
 
             const content = document.createElement('div');
             content.className = 'iq-content';
@@ -1918,7 +1918,7 @@ export function leaveToCollaboration() { return _ctx?.leaveToCollaboration?.(); 
 
             content.append(title, columns, quote, btnContinue);
             overlay.appendChild(content);
-            document.body.appendChild(overlay);
+            container.appendChild(overlay);
 
             Object.assign(iqEl, {
                 overlay, content, title, question, choices, btnOui, btnNon, stats, charts,
