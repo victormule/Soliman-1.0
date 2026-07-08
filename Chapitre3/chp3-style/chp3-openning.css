@@ -208,7 +208,11 @@
 #chapitre3-root .iq-btn-outline {
     fill:none; stroke:#FFFDF6; stroke-width:1.5;
     stroke-dasharray:100; stroke-dashoffset:100;
-    vector-effect:non-scaling-stroke;
+    /* PAS de vector-effect:non-scaling-stroke : combiné à pathLength="100" il
+       fait ignorer pathLength au navigateur → le tracé se fend (visible surtout
+       en plein écran). Les camemberts (pathLength=100 sans non-scaling-stroke)
+       se dessinent correctement — on aligne le bouton dessus. Le trait suit
+       désormais l'échelle du bouton (cohérent avec le reste du questionnaire). */
     filter:url(#chp3-iqGlow);
     transition:stroke-dashoffset var(--iq-btn-dur, 600ms) cubic-bezier(.4,0,.2,1), stroke .3s ease;
 }
