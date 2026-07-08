@@ -205,26 +205,29 @@ export class Chapitre3Scene extends Scene {
           <img id="chp3-img" class="travelling-img"
                src="${ASSET_PATH}chp3-images/kleber_versaille2.webp"
                alt="" draggable="false" decoding="async">
-
-          <!-- HOTSPOTS (voyagent avec l'image) — groupes peuplés par le moteur -->
-          <svg id="chp3-hotspots" class="hotspots" xmlns="http://www.w3.org/2000/svg"
-               preserveAspectRatio="none">
-            <defs>
-              <!-- ⚠️ Filtres reconstruits : remplacer par les <defs> d'origine. -->
-              <filter id="chp3-glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="1.6" result="b"/>
-                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="chp3-glow-click" x="-80%" y="-80%" width="260%" height="260%">
-                <feGaussianBlur stdDeviation="3.2" result="b"/>
-                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="chp3-ink-shadow" x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="0.5" stdDeviation="0.6" flood-color="rgba(0,0,0,0.5)"/>
-              </filter>
-            </defs>
-          </svg>
         </div>
+
+        <!-- HOTSPOTS — FRÈRE de #chp3-scene (surtout PAS imbriqué) : le moteur
+             applique la MÊME transform séparément à #chp3-scene et #chp3-hotspots
+             (applyScene). Les imbriquer doublerait la transform sur les cercles
+             (dérive/chute + fausse parallaxe). Groupes peuplés par le moteur. -->
+        <svg id="chp3-hotspots" class="hotspots" xmlns="http://www.w3.org/2000/svg"
+             preserveAspectRatio="none">
+          <defs>
+            <!-- ⚠️ Filtres reconstruits : remplacer par les <defs> d'origine. -->
+            <filter id="chp3-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.6" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="chp3-glow-click" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3.2" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="chp3-ink-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="0.5" stdDeviation="0.6" flood-color="rgba(0,0,0,0.5)"/>
+            </filter>
+          </defs>
+        </svg>
 
         <!-- COUCHES D'ATMOSPHÈRE (clics traversants) -->
         <canvas id="chp3-dust" class="overlay"></canvas>
