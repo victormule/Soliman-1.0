@@ -23,6 +23,7 @@ import { VitrineScene }       from './scenes/VitrineScene.js';
 import { PhrenologieScene }   from './scenes/PhrenologieScene.js';
 import { CollaborationScene } from './scenes/CollaborationScene.js';
 import { Chapitre2Scene }   from './scenes/Chapitre2Scene.js';
+import { Chapitre3Scene }   from './scenes/Chapitre3Scene.js';
 import { Chapitre1Scene }    from './scenes/Chapitre1Scene.js';
 
 const C = window.CONFIG;
@@ -99,6 +100,7 @@ manager.register(new PhrenologieScene(systems));
 manager.register(new CollaborationScene(systems));
 manager.register(new Chapitre1Scene(systems));
 manager.register(new Chapitre2Scene(systems));
+manager.register(new Chapitre3Scene(systems));
 
 /* ── 8. Navigation ───────────────────────────────────────────── */
 bus.on('navigate', ({ to }) => manager.go(to));
