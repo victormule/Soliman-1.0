@@ -790,7 +790,7 @@ function updateSRT(currentTimeMs) {
     const srtHtml = lines.map(l => `<span class="srt-line">${escapeHtml(l)}</span>`).join('');
     
     // 2. On prépare votre crédit avec un style intégré pour aller au plus vite
-    const creditHtml = `<div style="margin-top: 16px; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(16px, 1.5vw, 24px); color: rgba(255, 255, 255, 0.7); font-style: italic; letter-spacing: 0.05em;">— A., étudiant</div>`;
+    const creditHtml = `<div style="margin-top: 16px; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(16px, 1.5vw, 24px); color: rgba(255, 255, 255, 0.7); font-style: italic; letter-spacing: 0.05em;">— A., Étudiante</div>`;
     
     // 3. On injecte le tout dans le conteneur
     srtContainer.innerHTML = srtHtml + creditHtml;
