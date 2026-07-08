@@ -128,7 +128,8 @@ export class Chapitre2Scene extends Scene {
       'l\u2019avait complètement déshumanisé. C\u2019est comme si on voulait ' +
       'punir son corps même après sa mort. Ce geste m\u2019a paru violent, cruel, ' +
       'et profondément injuste. Ça m\u2019a vraiment touché et ouvert les yeux sur ' +
-      'la violence physique et symbolique du colonialisme »';
+      'la violence physique et symbolique du colonialisme »'+
+      '— L. lycéenne ';
   }
 
   /* ── Cycle de vie ──────────────────────────────────────────────────────── */
