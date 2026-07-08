@@ -69,11 +69,17 @@ export class Chapitre3Scene extends Scene {
     await super.enter(params);
 
     try {
-      // Contexte chapitre 3 : curseur custom + remontée z des UI partagées.
+      // Contexte chapitre 3 : curseur custom + remontée z des titres et du
+      // bouton plein écran au-dessus du root plein écran (cf. body.chp3-active
+      // dans style.css ; sans ça, z 15 < z 500 → ils resteraient masqués).
       document.body.classList.add('chp3-active');
 
       this.bgMgr.blackout();
       await this.transition.fadeVeil(0, 0);
+
+      // Tier 2 : sous-titre « Le Général Jean-Baptiste Kléber » sous
+      // « Espace collaboratif » (#site-title reste géré par CollaborationScene).
+      this._showSubtitle();
 
       // DOM puis CSS — ⚠️ on ATTEND que la feuille soit appliquée AVANT d'importer
       // le moteur : init() mesure la mise en page (img.clientWidth → coverScale,
@@ -116,6 +122,10 @@ export class Chapitre3Scene extends Scene {
     this._arrow.hide();
     this._unregisterWindowListeners();
 
+    // Tier 2 : le sous-titre disparaît en quittant le chapitre 3.
+    // (#site-title « Espace collaboratif » reste géré par CollaborationScene.)
+    this._hideSubtitle();
+
     document.body.classList.remove('chp3-active');
     this._removeDOM();
     this._removeCSS();
@@ -129,6 +139,50 @@ export class Chapitre3Scene extends Scene {
 
   onResize() {
     this._arrow.resize?.();
+    this._applySubtitleFont(document.getElementById('chapitre-subtitle'));
+  }
+
+  /* ── Sous-titre (tier 2) ────────────────────────────────────────────────
+     Réutilise le #chapitre-subtitle statique de index.html : l'apparition et
+     la disparition cinématographiques (fondu + translation) sont portées par
+     la classe .visible en CSS — strictement le même mécanisme qu'au chapitre 2.
+  ─────────────────────────────────────────────────────────────────────────── */
+
+  _applySubtitleFont(el) {
+    const f = window.CONFIG.FONTS?.subtitle;
+    if (!f || !el) return;
+    const vW = Math.max(window.CONFIG.MIN_SIZE.width, window.innerWidth);
+    el.style.fontFamily    = f.family;
+    el.style.fontSize      = Math.max(f.size_min, Math.min(f.size_max,
+                              Math.round(vW * f.size_vw / 100))) + 'px';
+    el.style.fontWeight    = f.weight;
+    el.style.letterSpacing = f.spacing;
+    el.style.fontStyle     = f.style;
+  }
+
+  _showSubtitle() {
+    const el = document.getElementById('chapitre-subtitle');
+    if (!el) return;
+    el.innerHTML = window.CONFIG.CHAPITRE3?.subtitle ?? 'Le Général Jean-Baptiste Kléber';
+    this._applySubtitleFont(el);
+    // Temporisation : ne pas chevaucher le fondu d'entrée de scène.
+    setTimeout(() => { if (this.isActive) el.classList.add('visible'); }, 400);
+  }
+
+  /**
+   * @param {boolean} immediate  true  → coupe net (retour Espace collaboratif),
+   *                             false → laisse jouer la transition CSS de sortie.
+   */
+  _hideSubtitle(immediate = true) {
+    const el = document.getElementById('chapitre-subtitle');
+    if (!el) return;
+    if (immediate) {
+      el.style.transition = 'none';
+      el.classList.remove('visible');
+      requestAnimationFrame(() => { el.style.transition = ''; });
+    } else {
+      el.classList.remove('visible');
+    }
   }
 
   /* ── Flèche de retour ──────────────────────────────────────────────────── */
@@ -141,6 +195,12 @@ export class Chapitre3Scene extends Scene {
   }
 
   _leaveToCollaboration() {
+    // Le fondu #chp3-fade vit DANS #chapitre3-root (z 500) alors que le
+    // sous-titre est remonté à z 600 : sans ceci il flotterait au-dessus du noir
+    // puis disparaîtrait sèchement. On le fait s'effacer en douceur (transition
+    // CSS ~1.1s) en parallèle du fondu (~1.2s).
+    this._hideSubtitle(false);
+
     if (this._module?.leaveToCollaboration) {
       this._module.leaveToCollaboration();
     } else {
