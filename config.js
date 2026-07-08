@@ -48,9 +48,9 @@ window.CONFIG = {
   PHRENOLOGIE: {
 
     torch: {
-      size:              0.30,   // Fraction de min(W,H) — torche intime, centrée sur le sujet
-      grow_duration:     6000,
-      fade_out_duration: 1500,
+      size:              0.34,   // Fraction de min(W,H) — torche intime, centrée sur le sujet
+      grow_duration:     3000,
+      fade_out_duration: 1400,
     },
 
     arrow: {
