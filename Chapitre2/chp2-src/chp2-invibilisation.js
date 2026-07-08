@@ -716,7 +716,7 @@ function fluteOut(pause, ms) { fluteFade(0, ms, pause !== false); }
    GESTION DES SOUS-TITRES SRT
    ============================================================ */
 
-const srtContainer = $('srt-subtitles');
+const srtContainer = $('srt-subtitles','text-label');
 let srtCues = [];
 let srtRafId = 0;
 let srtActive = false;
