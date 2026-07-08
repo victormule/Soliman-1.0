@@ -776,6 +776,7 @@ function ensureSubtitleFont() {
   // Cette fonction est conservée pour compatibilité mais n'injecte plus rien.
 }
 
+
 /** Met à jour l'affichage des sous-titres selon le temps audio */
 function updateSRT(currentTimeMs) {
   if (!srtCues.length) return;
@@ -784,9 +785,15 @@ function updateSRT(currentTimeMs) {
   const cue = srtCues.find(c => t >= c.start && t < c.end);
 
   if (cue) {
-    // Afficher le sous-titre
+    // 1. On prépare les lignes du SRT
     const lines = cue.text.split(/\n/);
-    srtContainer.innerHTML = lines.map(l => `<span class="srt-line">${escapeHtml(l)}</span>`).join('');
+    const srtHtml = lines.map(l => `<span class="srt-line">${escapeHtml(l)}</span>`).join('');
+    
+    // 2. On prépare votre crédit avec un style intégré pour aller au plus vite
+    const creditHtml = `<div style="margin-top: 16px; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(16px, 1.5vw, 24px); color: rgba(255, 255, 255, 0.7); font-style: italic; letter-spacing: 0.05em;">— A., étudiant</div>`;
+    
+    // 3. On injecte le tout dans le conteneur
+    srtContainer.innerHTML = srtHtml + creditHtml;
     srtContainer.classList.add('visible');
   } else {
     srtContainer.classList.remove('visible');
