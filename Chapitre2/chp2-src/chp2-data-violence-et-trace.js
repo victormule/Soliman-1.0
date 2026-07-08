@@ -47,7 +47,7 @@ export const slides = [
         type: "audio",
         src: "Chapitre2/chp2-medias/temoignage-guillaume-auxence.mp3",
         thumb: "Chapitre2/chp2-images/temoignage-guillaume.png",
-        caption: "Témoignage Guillaume-Auxence",
+        caption: "Témoignage A. et G. lycéens",
         tilt: 6,
         top: "31%",
     },
