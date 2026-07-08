@@ -1123,3 +1123,113 @@ body.invibilisation-media #chapitre-part-title {
   pointer-events: none !important;
   transition: opacity 400ms ease;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   CURSEUR — flèche élégante (remplace le point pâle)
+   ────────────────────────────────────────────────────────────────────
+   À COLLER À LA FIN DE style.css : ces règles priment sur les anciennes
+   par ordre de source (même spécificité) — aucune suppression nécessaire.
+
+   Principe :
+   - #cursor devient une flèche (silhouette SVG via `mask`), remplie par
+     `background-color` → recolorable par état (ivoire → doré au survol).
+   - La POINTE est au coin haut-gauche du SVG (0,0) ; `transform-origin:0 0`
+     garde la pointe fixée sur le point de clic même quand la flèche grossit.
+   - `filter: drop-shadow(...)` donne un liseré sombre + une profondeur →
+     lisible sur fond clair comme sombre, et remplace les `box-shadow`
+     (qui, sur une forme masquée, produiraient un halo rectangulaire).
+   - Le viseur encre de la sous-partie « peine démesurée » (body.peine-aim)
+     est préservé : on y neutralise le mask.
+   ════════════════════════════════════════════════════════════════════ */
+
+#cursor {
+  /* Silhouette flèche — fill blanc pour être robuste (alpha ET luminance). */
+  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 20'%3E%3Cpath fill='%23fff' d='M0 0 L0 14.6 L4 11.3 L6.35 17.3 L8.6 16.4 L6.2 10.6 L11.1 10.6 Z'/%3E%3C/svg%3E");
+
+  width: 17px;
+  height: 19px;
+  border-radius: 0;
+  background: none;
+  background-color: rgba(255, 249, 233, 0.97);   /* ivoire chaud */
+
+  -webkit-mask: var(--cursor-arrow) no-repeat 0 0 / contain;
+          mask: var(--cursor-arrow) no-repeat 0 0 / contain;
+
+  /* Pointe (coin haut-gauche du SVG) posée sur le point de clic. */
+  transform-origin: 0 0;
+  transform: translate(-1px, -1px);
+
+  /* Liseré sombre net (visibilité universelle) + légère profondeur. */
+  filter:
+    drop-shadow(0 0 0.6px rgba(0, 0, 0, 0.9))
+    drop-shadow(0 1.5px 2px rgba(0, 0, 0, 0.38));
+
+  box-shadow: none;
+  transition:
+    transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.22s ease,
+    filter 0.22s ease,
+    opacity 0.22s ease;
+}
+
+/* Clic (mousedown) — la flèche s'enfonce légèrement, teinte dorée. */
+#cursor.active {
+  width: 17px;
+  height: 19px;
+  background-color: rgba(255, 226, 158, 1);
+  transform: translate(-1px, -1px) scale(0.88);
+  box-shadow: none;
+  filter:
+    drop-shadow(0 0 0.6px rgba(0, 0, 0, 0.85))
+    drop-shadow(0 0 6px rgba(255, 200, 70, 0.55));
+  animation: none;
+}
+
+/* Survol d'un élément cliquable — flèche dorée, plus grande, glow doux. */
+#cursor.hotspot {
+  width: 17px;
+  height: 19px;
+  background-color: rgba(255, 216, 122, 1);
+  transform: translate(-1px, -1px) scale(1.32);
+  box-shadow: none;
+  filter:
+    drop-shadow(0 0 0.6px rgba(120, 80, 0, 0.55))
+    drop-shadow(0 0 8px rgba(255, 205, 80, 0.85))
+    drop-shadow(0 0 16px rgba(255, 170, 30, 0.45));
+  animation: cursorArrowPulse 1.15s ease-in-out infinite;
+}
+
+/* Variante atténuée (yeux d'invibilisation, chapitre 2). */
+#cursor.hotspot-soft {
+  width: 17px;
+  height: 19px;
+  background-color: rgba(255, 232, 178, 0.98);
+  transform: translate(-1px, -1px) scale(1.12);
+  box-shadow: none;
+  filter:
+    drop-shadow(0 0 0.6px rgba(0, 0, 0, 0.7))
+    drop-shadow(0 0 6px rgba(255, 205, 80, 0.55));
+  animation: none;
+}
+
+/* Pulsation douce ancrée sur la pointe (transform-origin:0 0 hérité). */
+@keyframes cursorArrowPulse {
+  0%, 100% { transform: translate(-1px, -1px) scale(1.32); }
+  50%      { transform: translate(-1px, -1px) scale(1.46); }
+}
+
+/* ── Préservation du viseur « peine démesurée » (chapitre 2) ──────────
+   On neutralise le mask flèche pour rendre au curseur sa forme d'origine
+   (point/viseur encre + ::after) et on restaure l'ancrage CENTRÉ (au repos
+   il n'a pas de transform propre — il héritait donc de la base). Les états
+   focalisés .aim-hot/.hotspot repositionnent eux-mêmes via l'animation
+   peineAimPulse. Spécificité (1,1,1) > #cursor (1,0,0). */
+body.peine-aim #cursor,
+body.peine-aim #cursor.hotspot,
+body.peine-aim #cursor.aim-hot {
+  -webkit-mask: none;
+          mask: none;
+  transform-origin: center;
+  transform: translate(-50%, -50%);
+  filter: none;
+}
