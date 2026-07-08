@@ -154,6 +154,11 @@ body.page3 #hotspot-layer {
 
 /* ══════════════════════════════════════════════════════════════════
    CURSOR
+   ──────────────────────────────────────────────────────────────────
+   ⚠️ Le rendu du curseur est REDÉFINI plus bas (section « CURSEUR —
+   flèche élégante »), qui prime par ordre de source. Les règles
+   ci-dessous restent la base historique (dimensions, transitions) et
+   servent de repli pour les variantes qui neutralisent le mask.
    ══════════════════════════════════════════════════════════════════ */
 
 #cursor {
@@ -228,11 +233,11 @@ body.page3 #hotspot-layer {
    CURSEUR — variantes Chapitre 2
    ────────────────────────────────────────────────────────────────────
    Le chapitre 2 réutilise le MÊME curseur de base que le reste du site
-   (#cursor, point doré) et le décline par contexte :
+   (#cursor) et le décline par contexte :
    - .hotspot       : grossissement + pulse doré standard (crânes openning,
                       diapos du cartel) — défini plus haut.
    - .hotspot-soft  : version atténuée et plus petite (yeux d'invibilisation).
-   - body.peine-aim : remplace entièrement le point par un viseur noir
+   - body.peine-aim : remplace entièrement le curseur par un viseur noir
                       minimaliste (sous-partie « peine démesurée »), qui se
                       focalise (grossit + pulse) au survol d'un mot-clef.
    ──────────────────────────────────────────────────────────────────── */
@@ -268,7 +273,7 @@ body.page3 #hotspot-layer {
 }
 
 /* ── Curseur « peine démesurée » ────────────────────────────────────
-   Esprit exploration d'un journal d'antan : le point doré devient un
+   Esprit exploration d'un journal d'antan : le curseur devient un
    discret point d'encre sépia. Au survol d'un élément interactif (mot-clef,
    flèche retour, bouton plein écran) il éclôt en un fin anneau de
    focalisation avec un point de visée central — comme une loupe qui se pose
@@ -885,14 +890,16 @@ body.peine-aim #cursor.hotspot::after {
   overflow: hidden;
 }
 
-/* Effet de grain subtil en superposition */
+/* Effet de grain subtil en superposition.
+   ⚠️ Le data-URI contenait un caractère corrompu (« %3微%3C » au lieu de
+   « %3E%3C ») : le SVG était invalide, donc le grain ne s'affichait pas. */
 #start-screen::before {
   content: "";
   position: absolute;
   inset: 0;
   opacity: 0.03;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3微%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
 #start-screen.hidden {
@@ -1125,10 +1132,43 @@ body.invibilisation-media #chapitre-part-title {
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   CHAPITRE 3 — Containment
+   ─────────────────────────────────────────────────────────────────
+   Mêmes garanties d'empilement que le chapitre 2. #chapitre3-root est
+   position:fixed / z-index:500 (posé aussi en inline par Chapitre3Scene).
+   ══════════════════════════════════════════════════════════════════ */
+
+#chapitre3-root {
+  z-index: 500;
+  cursor: none;
+}
+
+/* Neutraliser le cursor global pendant le chapitre 3 */
+body.chp3-active,
+body.chp3-active * {
+  cursor: none !important;
+}
+
+/* Le titre « Espace collaboratif », le sous-titre du chapitre et le bouton
+   plein écran sont en z 15 : sans cette remontée ils resteraient ENTERRÉS sous
+   #chapitre3-root (z 500). On les fait flotter au-dessus, exactement comme
+   body.chp2-active le fait pour le chapitre 2. #chapitre-part-title n'est pas
+   listé : le chapitre 3 n'a pas de sous-parties (tier 3 inutilisé).
+   #chapter-quote et #skip-btn restent inertes sans contenu (opacité 0 /
+   pointer-events none) : aucun effet de bord. */
+body.chp3-active #site-title,
+body.chp3-active #chapitre-subtitle,
+body.chp3-active #fs-btn,
+body.chp3-active #chapter-quote,
+body.chp3-active #skip-btn {
+  z-index: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════════
    CURSEUR — flèche élégante (remplace le point pâle)
    ────────────────────────────────────────────────────────────────────
-   À COLLER À LA FIN DE style.css : ces règles priment sur les anciennes
-   par ordre de source (même spécificité) — aucune suppression nécessaire.
+   Placé EN FIN DE FICHIER : ces règles priment sur celles de la section
+   CURSOR plus haut par ordre de source (même spécificité).
 
    Principe :
    - #cursor devient une flèche (silhouette SVG via `mask`), remplie par
