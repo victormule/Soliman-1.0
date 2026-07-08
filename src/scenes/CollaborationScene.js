@@ -96,7 +96,7 @@ export class CollaborationScene extends Scene {
     const t0        = Date.now();
     /** @type {boolean} Retour depuis un chapitre (1 ou 2) : le titre
      * « Espace collaboratif » est déjà en place, on ne le reswape pas. */
-    const fromChap1 = params.from === 'chapitre1' || params.from === 'chapitre2';
+    const fromChap1 = params.from === 'chapitre1' || params.from === 'chapitre2' || params.from === 'chapitre3';
 
     // À chaque entrée, on verrouille les interactions jusqu'à la fin de l'intro.
     this._navigationActive = false;
