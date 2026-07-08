@@ -160,8 +160,8 @@ window.CONFIG = {
 
       // Contenu
       labels:       ['I', 'II', 'III', 'IV', 'V'],
-      hover_titles: ['Les interpétations du geste de Soliman al-Halabi', 'L’héritage colonial du musée', 'Le Général Jean-Baptiste Kléber', 'Une histoire complexe (à venir)', 'Le devenir du corps de Soliman al-Halabi(à venir)'],
-      actions:      ['chapitre1', 'chapitre2', null, null, null],
+      hover_titles: ['Les interpétations du geste de Soliman al-Halabi', 'L’héritage colonial du musée', 'Chapitre 3', 'Chapitre 4', 'Chapitre 5'],
+      actions:      ['chapitre1', 'chapitre2', 'chapitre3', null, null],
     },
 
     audio: {
