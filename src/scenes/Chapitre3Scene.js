@@ -75,9 +75,14 @@ export class Chapitre3Scene extends Scene {
       this.bgMgr.blackout();
       await this.transition.fadeVeil(0, 0);
 
-      // DOM + CSS
+      // DOM puis CSS — ⚠️ on ATTEND que la feuille soit appliquée AVANT d'importer
+      // le moteur : init() mesure la mise en page (img.clientWidth → coverScale,
+      // positions des cercles) et le questionnaire trace ses boutons via des
+      // transitions CSS. Sans cette attente, la 1ʳᵉ entrée (CSS non encore chargé)
+      // donne des cercles mal placés et des boutons figés à moitié. L'attente
+      // rend aussi toutes les (ré)entrées identiques (CSS caché ou non).
       this._injectDOM();
-      this._injectCSS();
+      await this._injectCSS();
 
       // Listener de retour (avant le module, par sûreté).
       this._registerWindowListeners();
@@ -255,13 +260,29 @@ export class Chapitre3Scene extends Scene {
 
   /* ── CSS ─────────────────────────────────────────────────────────────── */
 
+  /**
+   * Injecte la feuille de style du chapitre et résout QUAND elle est appliquée.
+   * Idempotent : sur une ré-entrée, le <link> déjà présent est réutilisé (résout
+   * immédiatement s'il est déjà chargé). 'error' résout aussi → ne bloque jamais
+   * l'entrée si le fichier manque (dégradé plutôt que blocage).
+   */
   _injectCSS() {
-    if (document.getElementById(CSS_LINK_ID)) return;
-    document.head.appendChild(Object.assign(document.createElement('link'), {
-      id:   CSS_LINK_ID,
-      rel:  'stylesheet',
-      href: 'Chapitre3/chp3-style/chp3-openning.css',
-    }));
+    return new Promise((resolve) => {
+      const existing = document.getElementById(CSS_LINK_ID);
+      if (existing) {
+        if (existing.sheet) resolve();
+        else existing.addEventListener('load', () => resolve(), { once: true });
+        return;
+      }
+      const link = Object.assign(document.createElement('link'), {
+        id:   CSS_LINK_ID,
+        rel:  'stylesheet',
+        href: 'Chapitre3/chp3-style/chp3-openning.css',
+      });
+      link.addEventListener('load',  () => resolve(), { once: true });
+      link.addEventListener('error', () => resolve(), { once: true });
+      document.head.appendChild(link);
+    });
   }
 
   _removeCSS() {
