@@ -222,6 +222,19 @@ window.CONFIG = {
 
 
 /* ══════════════════════════════════════════════════════════════════
+   CHAPITRE 3
+   ══════════════════════════════════════════════════════════════════ */
+
+  CHAPITRE3: {
+    // Sous-titre (tier 2) affiché sous « Espace collaboratif » dès l'entrée
+    // dans le chapitre 3, et masqué au retour vers l'Espace collaboratif.
+    // Rendu par Chapitre3Scene via #chapitre-subtitle (apparition/disparition
+    // cinématographiques portées par la classe .visible en CSS).
+    subtitle: 'Le Général Jean-Baptiste Kléber',
+  },
+
+
+/* ══════════════════════════════════════════════════════════════════
    CHAPITRE 1
    ══════════════════════════════════════════════════════════════════ */
 
@@ -500,8 +513,13 @@ window.CONFIG.COLLAB = {
 /* ══════════════════════════════════════════════════════════════════
    ALIAS CHAPITRE1 — Requis par TorchSystem.updateTarget()
    qui lit CONFIG.CHAPITRE1.torch_phren et torch_interactive (plat)
+   ──────────────────────────────────────────────────────────────────
+   ⚠️ CHAPITRE1 ne définit PAS de bloc `torch` (seulement `light`) : sans
+   optional chaining, ces trois lignes lèvent un TypeError qui INTERROMPT
+   la fin de config.js. Les alias valent donc undefined — exactement comme
+   avant, mais sans casser l'exécution du script.
    ══════════════════════════════════════════════════════════════════ */
 
-window.CONFIG.CHAPITRE1.torch_phren       = window.CONFIG.CHAPITRE1.torch.size_phren;
-window.CONFIG.CHAPITRE1.torch_interactive = window.CONFIG.CHAPITRE1.torch.size_interactive;
-window.CONFIG.CHAPITRE1.torch_media_dim   = window.CONFIG.CHAPITRE1.torch.size_media_dim;
+window.CONFIG.CHAPITRE1.torch_phren       = window.CONFIG.CHAPITRE1.torch?.size_phren;
+window.CONFIG.CHAPITRE1.torch_interactive = window.CONFIG.CHAPITRE1.torch?.size_interactive;
+window.CONFIG.CHAPITRE1.torch_media_dim   = window.CONFIG.CHAPITRE1.torch?.size_media_dim;
