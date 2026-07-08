@@ -551,6 +551,7 @@ export class Chapitre2Scene extends Scene {
         </div>
         <div id="loader"><div id="loader-track"><div id="loader-fill"></div></div></div>
         <div id="srt-subtitles"></div>
+        <div class="text-label"><br>— A.,Etudiante</div>
         <main id="scene">
           <div id="gw1" class="globe-wrap"><div class="globe-scale">
             <img id="g1n" class="layer globe-normal" src="${ASSET_PATH}chp2-images/EyesGlobe.webp"        srcset="${ASSET_PATH}chp2-images/EyesGlobe-800.webp 800w, ${ASSET_PATH}chp2-images/EyesGlobe-1200.webp 1200w, ${ASSET_PATH}chp2-images/EyesGlobe.webp 1920w"        sizes="100vw" width="1920" height="1342" alt="" decoding="async">
