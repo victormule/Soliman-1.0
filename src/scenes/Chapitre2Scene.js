@@ -128,8 +128,7 @@ export class Chapitre2Scene extends Scene {
       'l\u2019avait complètement déshumanisé. C\u2019est comme si on voulait ' +
       'punir son corps même après sa mort. Ce geste m\u2019a paru violent, cruel, ' +
       'et profondément injuste. Ça m\u2019a vraiment touché et ouvert les yeux sur ' +
-      'la violence physique et symbolique du colonialisme »'+
-      '— L. lycéenne ';
+      'la violence physique et symbolique du colonialisme »';
   }
 
   /* ── Cycle de vie ──────────────────────────────────────────────────────── */
@@ -152,9 +151,19 @@ export class Chapitre2Scene extends Scene {
       this._showSubtitle();
       this._hidePartTitle(true);
 
-      // DOM + CSS
+      // ── ORDRE D'ENTRÉE (noir garanti, zéro flash) ──────────────────────
+      // 1. CSS AVANT le DOM et ATTENDU : sans la feuille, les images du
+      //    travelling et des sous-parties s'affichent brutes.
+      // 2. DOM injecté AVEC son rideau noir (#chp2-boot, styles inline).
+      // 3. Attente du DÉCODAGE de #chp2-img : measure() lit
+      //    getBoundingClientRect().width pour placer lumières et hotspots ;
+      //    mesurer une image non décodée fausse toute la géométrie.
+      // 4. Module importé, puis 'chp2:opening-ready' quand le canvas
+      //    d'obscurité est en place (il naît display:none → travelling en clair).
+      // 5. Levée du rideau : on ne dévoile qu'un aplat noir, la bougie s'allume.
+      await this._injectCSS();
       this._injectDOM();
-      this._injectCSS();
+      await this._waitForImage();
 
       // Listeners ready/return des sous-parties (avant le module, par sûreté)
       this._registerWindowListeners();
@@ -181,11 +190,21 @@ export class Chapitre2Scene extends Scene {
         () => this._openingArrow.hide()
       );
 
+      // ⚠️ S'abonner AVANT de démarrer : le signal peut arriver très vite.
+      const openingReady = this._waitOpeningReady();
+
       await this._module.startChapitre2?.();
+
+      // On attend que la nuit soit posée (canvas d'obscurité affiché), puis on
+      // lève le rideau. Jusque-là l'écran est noir, quoi qu'il arrive.
+      await openingReady;
+      this._raiseBootCurtain();
 
     } catch (err) {
       if (err.message === 'scene_aborted') return;
       console.error('[Chapitre2Scene] Erreur enter() :', err);
+      // Secours : ne jamais rester bloqué derrière le rideau noir.
+      this._raiseBootCurtain();
     }
   }
 
@@ -221,6 +240,8 @@ export class Chapitre2Scene extends Scene {
 
     // Retirer les listeners window
     this._unregisterWindowListeners();
+    this._openingReadyCleanup?.();
+    this._openingReadyCleanup = null;
 
     CHp2_BODY_CLASSES.forEach(cls => document.body.classList.remove(cls));
     document.body.classList.remove('chp2-active');
@@ -552,7 +573,6 @@ export class Chapitre2Scene extends Scene {
         </div>
         <div id="loader"><div id="loader-track"><div id="loader-fill"></div></div></div>
         <div id="srt-subtitles"></div>
-        <div class="text-label"><br>— A.,Etudiante</div>
         <main id="scene">
           <div id="gw1" class="globe-wrap"><div class="globe-scale">
             <img id="g1n" class="layer globe-normal" src="${ASSET_PATH}chp2-images/EyesGlobe.webp"        srcset="${ASSET_PATH}chp2-images/EyesGlobe-800.webp 800w, ${ASSET_PATH}chp2-images/EyesGlobe-1200.webp 1200w, ${ASSET_PATH}chp2-images/EyesGlobe.webp 1920w"        sizes="100vw" width="1920" height="1342" alt="" decoding="async">
@@ -612,7 +632,6 @@ export class Chapitre2Scene extends Scene {
           <div class="text-content">
             <span class="text-label">Témoignage</span>
             <p id="text-quote" class="text-quote">« ça m'a beaucoup questionnée sur la manière dont on construit les récits historiques&nbsp;: qui décide de ce que l'on montre, de ce que l'on cache, et pourquoi&nbsp;? »</p>
-              <div class="text-label"><br>— A., lycéen</div>
           </div>
         </div>
       </div>
@@ -673,7 +692,7 @@ export class Chapitre2Scene extends Scene {
                           <p>On vient d'exposer dans les galeries du pavillon d'anatomie comparée, au Muséum, un squelette qui n'y figure d'ailleurs qu'à titre de pièce anatomique, mais qui a son histoire.</p>
                           <p>Ce squelette est celui de Souleiman el Aleby, le meurtrier de Kléber.</p>
                           <p>Souleiman el Aleby n'était point un meurtrier vulgaire. Il avait été <span class="mot-clef" data-key="condamne" data-categorie="Démesure" data-titre="« Condamné par le conseil de guerre »">condamné par le conseil de guerre</span> du Caire à avoir la main droite brûlée, à être empalé et exposé aux oiseaux de proie, simplement.</p>
-                          <p>Il subit sa peine le 25 prairial an VIII. Il étendit sur le bûcher la main qui avait frappé le général français, et la laissa griller sans proférer une plainte, sans qu'un muscle de son visage trahît <span class="mot-clef" data-key="souffrance" data-categorie="Témoignage G. lycéen" data-titre="« Horrible souffrance »">l'horrible souffrance</span> qu'il endurait. Mais <span class="mot-clef" data-key="bourreau" data-categorie="L'âme noire" data-titre="« le bourreau »">le bourreau</span> qui attisait le brasier ayant laissé tomber son tisonnier rouge sur le bras du condamné, Souleiman el Aleby protesta avec violence&nbsp;:</p>
+                          <p>Il subit sa peine le 25 prairial an VIII. Il étendit sur le bûcher la main qui avait frappé le général français, et la laissa griller sans proférer une plainte, sans qu'un muscle de son visage trahît <span class="mot-clef" data-key="souffrance" data-categorie="Témoignage Guillaume" data-titre="« Horrible souffrance »">l'horrible souffrance</span> qu'il endurait. Mais <span class="mot-clef" data-key="bourreau" data-categorie="L'âme noire" data-titre="« le bourreau »">le bourreau</span> qui attisait le brasier ayant laissé tomber son tisonnier rouge sur le bras du condamné, Souleiman el Aleby protesta avec violence&nbsp;:</p>
                           <p>— <span class="mot-clef" data-key="supplice" data-categorie="Au tribunal" data-titre="« Ce supplice, cria-t-il, n'est pas dans mon jugement. »">Ce supplice, cria-t-il, n'est pas dans mon jugement.</span></p>
                           <p>Et ce fut la seule révolte du musulman, qui subit jusqu'au bout sa peine avec le même stoïcisme.</p>
                         </div>
@@ -705,7 +724,7 @@ export class Chapitre2Scene extends Scene {
                   <p>On vient d'exposer dans les galeries du pavillon d'anatomie comparée, au Muséum, un squelette qui n'y figure d'ailleurs qu'à titre de pièce anatomique, mais qui a son histoire.</p>
                   <p>Ce squelette est celui de Souleiman el Aleby, le meurtrier de Kléber.</p>
                   <p>Souleiman el Aleby n'était point un meurtrier vulgaire. Il avait été <span class="mot-clef" data-key="condamne" data-categorie="Démesure" data-titre="« Condamné par le conseil de guerre »">condamné par le conseil de guerre</span> du Caire à avoir la main droite brûlée, à être empalé et exposé aux oiseaux de proie, simplement.</p>
-                  <p>Il subit sa peine le 25 prairial an VIII. Il étendit sur le bûcher la main qui avait frappé le général français, et la laissa griller sans proférer une plainte, sans qu'un muscle de son visage trahît <span class="mot-clef" data-key="souffrance" data-categorie="Témoignage G. lycéen" data-titre="« Horrible souffrance »">l'horrible souffrance</span> qu'il endurait. Mais <span class="mot-clef" data-key="bourreau" data-categorie="L'âme noire" data-titre="« le bourreau »">le bourreau</span> qui attisait le brasier ayant laissé tomber son tisonnier rouge sur le bras du condamné, Souleiman el Aleby protesta avec violence&nbsp;:</p>
+                  <p>Il subit sa peine le 25 prairial an VIII. Il étendit sur le bûcher la main qui avait frappé le général français, et la laissa griller sans proférer une plainte, sans qu'un muscle de son visage trahît <span class="mot-clef" data-key="souffrance" data-categorie="Témoignage Guillaume" data-titre="« Horrible souffrance »">l'horrible souffrance</span> qu'il endurait. Mais <span class="mot-clef" data-key="bourreau" data-categorie="L'âme noire" data-titre="« le bourreau »">le bourreau</span> qui attisait le brasier ayant laissé tomber son tisonnier rouge sur le bras du condamné, Souleiman el Aleby protesta avec violence&nbsp;:</p>
                   <p>— <span class="mot-clef" data-key="supplice" data-categorie="Au tribunal" data-titre="« Ce supplice, cria-t-il, n'est pas dans mon jugement. »">Ce supplice, cria-t-il, n'est pas dans mon jugement.</span></p>
                   <p>Et ce fut la seule révolte du musulman, qui subit jusqu'au bout sa peine avec le même stoïcisme.</p>
                 </template>
@@ -719,6 +738,13 @@ export class Chapitre2Scene extends Scene {
         </div>
         <!-- Flèche retour gérée par Chapitre2Scene (ArrowChp2Part 'peine-demesuree') -->
       </div>
+
+      <!-- RIDEAU DE CHARGEMENT — garantie « noir quoi qu'il arrive ».
+           Styles 100% INLINE : indépendant des 4 feuilles du chapitre (qui
+           peuvent arriver tard) et de l'état du LightSystem (dont le canvas
+           d'obscurité naît display:none → le travelling serait visible en
+           pleine lumière). Levé sur 'chp2:opening-ready'. -->
+      <div id="chp2-boot" style="position:absolute;inset:0;z-index:2147483000;background:#000;opacity:1;pointer-events:none;"></div>
     `;
 
     app.appendChild(root);
@@ -731,20 +757,87 @@ export class Chapitre2Scene extends Scene {
     this._container = null;
   }
 
+  /* ── Chargement & rideau ─────────────────────────────────────────────── */
+
+  /**
+   * Attend le DÉCODAGE de l'image du travelling (pas seulement son
+   * téléchargement) : measure() en dérive imgW, donc la position des lumières
+   * et des zones de clic. Ne bloque jamais l'entrée (timeout + résolution
+   * sur erreur).
+   */
+  _waitForImage(timeoutMs = 6000) {
+    const img = document.getElementById('chp2-img');
+    if (!img) return Promise.resolve();
+
+    const decoded = (async () => {
+      try {
+        if (img.decode) await img.decode();
+        else if (!img.complete) {
+          await new Promise(res => {
+            img.addEventListener('load',  res, { once: true });
+            img.addEventListener('error', res, { once: true });
+          });
+        }
+      } catch { /* image absente : on n'empêche pas l'entrée */ }
+      await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+    })();
+
+    const timeout = new Promise(res => this.addTimer(res, timeoutMs));
+    return Promise.race([decoded, timeout]);
+  }
+
+  /**
+   * Résolue quand le module signale que le canvas d'obscurité est en place
+   * ('chp2:opening-ready'). Timeout de sécurité : on lève quoi qu'il arrive.
+   */
+  _waitOpeningReady(timeoutMs = 12000) {
+    return new Promise(resolve => {
+      const onReady = () => { cleanup(); resolve(); };
+      const cleanup = () => window.removeEventListener('chp2:opening-ready', onReady);
+      window.addEventListener('chp2:opening-ready', onReady, { once: true });
+      this._openingReadyCleanup = cleanup;
+      this.addTimer(() => { cleanup(); resolve(); }, timeoutMs);
+    });
+  }
+
+  /** Lève le rideau noir : dessous, il n'y a plus qu'un aplat noir. */
+  _raiseBootCurtain() {
+    const boot = document.getElementById('chp2-boot');
+    if (!boot) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      boot.style.transition = 'opacity 320ms ease';
+      boot.style.opacity    = '0';
+      this.addTimer(() => boot.remove(), 400);
+    }));
+  }
+
   /* ── CSS ─────────────────────────────────────────────────────────────── */
 
+  /**
+   * Injecte les 4 feuilles du chapitre et résout quand elles sont APPLIQUÉES.
+   * Idempotent (ré-entrée : <link> déjà présent). 'error' résout aussi, pour ne
+   * jamais bloquer l'entrée si un fichier manque.
+   */
   _injectCSS() {
-    [
+    const sheets = [
       { id: 'chp2-css-violence',       href: 'Chapitre2/chp2-style/chp2-violence-et-trace.css' },
       { id: 'chp2-css-opening',        href: 'Chapitre2/chp2-style/chp2-openning.css'          },
       { id: 'chp2-css-invibilisation', href: 'Chapitre2/chp2-style/chp2-invibilisation.css'    },
       { id: 'chp2-css-peine',          href: 'Chapitre2/chp2-style/chp2-peine-demesuree.css'   },
-    ].forEach(({ id, href }) => {
-      if (document.getElementById(id)) return;
-      document.head.appendChild(
-        Object.assign(document.createElement('link'), { id, rel: 'stylesheet', href })
-      );
-    });
+    ];
+
+    return Promise.all(sheets.map(({ id, href }) => new Promise(resolve => {
+      const existing = document.getElementById(id);
+      if (existing) {
+        if (existing.sheet) resolve();
+        else existing.addEventListener('load', () => resolve(), { once: true });
+        return;
+      }
+      const link = Object.assign(document.createElement('link'), { id, rel: 'stylesheet', href });
+      link.addEventListener('load',  () => resolve(), { once: true });
+      link.addEventListener('error', () => resolve(), { once: true });
+      document.head.appendChild(link);
+    })));
   }
 
   _removeCSS() {
