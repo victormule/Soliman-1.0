@@ -834,6 +834,19 @@ function safeIgnite() {
   // disposer d'une largeur d'image fiable AVANT d'allumer — les lumières sont
   // centrées sur les crânes via imgW, et le hover en dépend aussi.
   measure();
+
+  // SPA — anti-flash : le canvas d'obscurité naît `display:none; opacity:0`.
+  // Tant qu'il n'est pas affiché, le travelling est visible EN PLEINE LUMIÈRE.
+  // On l'affiche donc TOUT DE SUITE : sans lumière allumée, _render() se contente
+  // de remplir le canvas en noir → la nuit est posée avant toute peinture utile.
+  // 300 ms couvrent le fondu d'apparition du canvas (transition opacity 220 ms),
+  // après quoi on signale à Chapitre2Scene qu'elle peut lever son rideau.
+  light.show();
+  _igniteTimers.push(setTimeout(function() {
+    if (!_active) return;
+    try { window.dispatchEvent(new CustomEvent('chp2:opening-ready')); } catch (_) {}
+  }, 300));
+
   ignite();
 }
 
