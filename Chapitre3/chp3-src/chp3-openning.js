@@ -2334,6 +2334,12 @@ export function leaveToCollaboration() { return _ctx?.leaveToCollaboration?.(); 
             iqEl.overlay.classList.remove('hidden');
             iqFit();   // calcule --iq-scale + recentre le groupe de gauche (mode large)
 
+            // SPA : l'overlay du questionnaire est monté, visible et OPAQUE
+            // (fond var(--ink)) — il masque donc entièrement le travelling.
+            // On signale à Chapitre3Scene qu'elle peut lever son rideau noir.
+            // Émis à CHAQUE iqShow() ; la scène n'écoute qu'une fois (once).
+            try { window.dispatchEvent(new CustomEvent('chp3:intro-ready')); } catch (_) {}
+
             await rvWait(reduceMotion ? 0 : 250);           // un souffle sur l'écran noir avant la question
             iqEl.title.classList.add('show');
             iqEl.question.classList.add('show');
