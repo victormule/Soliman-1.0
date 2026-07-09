@@ -63,7 +63,8 @@
   transition: opacity 0.45s ease;
   z-index: 3;
 }
-#chapitre2-root .chp2-overlay.visible { opacity: 1; }
+
+#chapitre2-root .chp2-overlay.visible { opacity: var(--chp2-ov-max, 1); }
 
 /* ─── Légende ─── */
 #chp2-legend {
