@@ -81,14 +81,19 @@ export class Chapitre3Scene extends Scene {
       // « Espace collaboratif » (#site-title reste géré par CollaborationScene).
       this._showSubtitle();
 
-      // DOM puis CSS — ⚠️ on ATTEND que la feuille soit appliquée AVANT d'importer
-      // le moteur : init() mesure la mise en page (img.clientWidth → coverScale,
-      // positions des cercles) et le questionnaire trace ses boutons via des
-      // transitions CSS. Sans cette attente, la 1ʳᵉ entrée (CSS non encore chargé)
-      // donne des cercles mal placés et des boutons figés à moitié. L'attente
-      // rend aussi toutes les (ré)entrées identiques (CSS caché ou non).
-      this._injectDOM();
+      // ── ORDRE D'ENTRÉE (noir garanti, zéro flash) ──────────────────────
+      // 1. CSS AVANT le DOM : `.travelling-img{opacity:0}` vient de la feuille ;
+      //    injecter le DOM d'abord afficherait l'image brute le temps du <link>.
+      // 2. DOM injecté AVEC son rideau noir (#chp3-boot, styles inline).
+      // 3. Attente du DÉCODAGE de l'image : init() mesure img.clientWidth pour
+      //    dériver coverScale/baseZoom et la position des cercles. C'est aussi
+      //    ce qui garantit que le moteur appelle init() tout de suite (il le
+      //    diffère au 'load' de l'image si elle n'est pas encore complete).
+      // 4. Module chargé, questionnaire monté → signal 'chp3:intro-ready'.
+      // 5. Levée du rideau : on ne dévoile qu'un aplat noir.
       await this._injectCSS();
+      this._injectDOM();
+      await this._waitForImage();
 
       // Listener de retour (avant le module, par sûreté).
       this._registerWindowListeners();
@@ -108,11 +113,23 @@ export class Chapitre3Scene extends Scene {
         () => this._arrow.hide()
       );
 
+      // ⚠️ S'abonner AVANT de démarrer : iqShow() émet 'chp3:intro-ready' de
+      // façon synchrone, l'écoute posée après serait trop tardive.
+      const introReady = this._waitIntroReady();
+
       await this._module.startChapitre3?.();
+
+      // On attend que le questionnaire soit monté et opaque, puis on lève le
+      // rideau. Jusque-là l'écran est noir, quoi qu'il arrive (CSS tardif,
+      // image non décodée, init différé, prefers-reduced-motion…).
+      await introReady;
+      this._raiseBootCurtain();
 
     } catch (err) {
       if (err?.message === 'scene_aborted') return;
       console.error('[Chapitre3Scene] Erreur enter() :', err);
+      // Secours : ne jamais rester bloqué derrière le rideau noir.
+      this._raiseBootCurtain();
     }
   }
 
@@ -121,6 +138,8 @@ export class Chapitre3Scene extends Scene {
 
     this._arrow.hide();
     this._unregisterWindowListeners();
+    this._introReadyCleanup?.();
+    this._introReadyCleanup = null;
 
     // Tier 2 : le sous-titre disparaît en quittant le chapitre 3.
     // (#site-title « Espace collaboratif » reste géré par CollaborationScene.)
@@ -260,9 +279,13 @@ export class Chapitre3Scene extends Scene {
     root.innerHTML = /* html */`
       <div class="cinema-container" id="chp3-container">
 
-        <!-- CAMÉRA : image de travelling -->
+        <!-- CAMÉRA : image de travelling.
+             style="opacity:0" en INLINE (et pas seulement via .travelling-img
+             du CSS) : si la feuille tardait, l'image s'afficherait à nu. Le
+             moteur pilote ensuite cette même propriété inline (fondu d'entrée
+             du travelling dans loop()). -->
         <div id="chp3-scene">
-          <img id="chp3-img" class="travelling-img"
+          <img id="chp3-img" class="travelling-img" style="opacity:0"
                src="${ASSET_PATH}chp3-images/kleber_versaille2.webp"
                alt="" draggable="false" decoding="async">
         </div>
@@ -309,6 +332,14 @@ export class Chapitre3Scene extends Scene {
         <!-- FONDU DE SORTIE → Espace collaboratif (piloté par leaveToCollaboration) -->
         <div id="chp3-fade"></div>
       </div>
+
+      <!-- RIDEAU DE CHARGEMENT — garantie « noir quoi qu'il arrive ».
+           Styles 100% INLINE : ne dépend NI de la feuille du chapitre (qui peut
+           arriver tard), NI d'une variable CSS, NI de l'état du moteur. Couvre
+           l'écran au-dessus de tout (y compris .iq-overlay, z 150) et n'est levé
+           que sur le signal 'chp3:intro-ready' émis par le moteur quand le
+           questionnaire est monté et opaque. -->
+      <div id="chp3-boot" style="position:absolute;inset:0;z-index:2147483000;background:#000;opacity:1;pointer-events:none;"></div>
     `;
 
     app.appendChild(root);
@@ -319,6 +350,69 @@ export class Chapitre3Scene extends Scene {
     if (!this._container) return;
     this._container.remove();
     this._container = null;
+  }
+
+  /* ── Chargement & révélation ───────────────────────────────────────────── */
+
+  /**
+   * Attend que l'image de travelling soit DÉCODÉE (pas seulement téléchargée)
+   * et que la mise en page soit stabilisée. init() dérive coverScale, baseZoom
+   * et la position des cercles de img.clientWidth/clientHeight : mesurer trop
+   * tôt donne une géométrie fausse.
+   * Ne bloque jamais l'entrée : timeout de sécurité + résolution sur erreur.
+   */
+  _waitForImage(timeoutMs = 6000) {
+    const img = document.getElementById('chp3-img');
+    if (!img) return Promise.resolve();
+
+    const decoded = (async () => {
+      try {
+        if (img.decode) await img.decode();
+        else if (!img.complete) {
+          await new Promise(res => {
+            img.addEventListener('load',  res, { once: true });
+            img.addEventListener('error', res, { once: true });
+          });
+        }
+      } catch { /* image absente ou décodage refusé : on n'empêche pas l'entrée */ }
+      // Deux frames : laisse le layout s'appliquer avant toute mesure.
+      await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+    })();
+
+    const timeout = new Promise(res => this.addTimer(res, timeoutMs));
+    return Promise.race([decoded, timeout]);
+  }
+
+  /**
+   * Promesse résolue quand le moteur signale que le questionnaire est monté et
+   * opaque ('chp3:intro-ready'). Doit être créée AVANT startChapitre3(), sinon
+   * l'événement — émis de façon synchrone dans iqShow() — serait manqué.
+   * Timeout de sécurité : on lève le rideau quoi qu'il arrive.
+   */
+  _waitIntroReady(timeoutMs = 9000) {
+    return new Promise(resolve => {
+      const onReady = () => { cleanup(); resolve(); };
+      const cleanup = () => window.removeEventListener('chp3:intro-ready', onReady);
+      window.addEventListener('chp3:intro-ready', onReady, { once: true });
+      this._introReadyCleanup = cleanup;
+      this.addTimer(() => { cleanup(); resolve(); }, timeoutMs);
+    });
+  }
+
+  /**
+   * Lève le rideau noir. Appelé une fois le questionnaire monté : sous le
+   * rideau il n'y a qu'un aplat noir (overlay du questionnaire), donc la levée
+   * ne dévoile jamais le décor. Deux frames avant le fondu pour garantir que la
+   * première peinture de l'overlay a bien eu lieu.
+   */
+  _raiseBootCurtain() {
+    const boot = document.getElementById('chp3-boot');
+    if (!boot) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      boot.style.transition = 'opacity 320ms ease';
+      boot.style.opacity    = '0';
+      this.addTimer(() => boot.remove(), 400);
+    }));
   }
 
   /* ── CSS ─────────────────────────────────────────────────────────────── */
