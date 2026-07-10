@@ -1273,3 +1273,328 @@ body.peine-aim #cursor.aim-hot {
   transform: translate(-50%, -50%);
   filter: none;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   DOCUMENTS & « À PROPOS » — overlay de la scène phrénologie
+   ──────────────────────────────────────────────────────────────────
+   EMPILEMENT VOULU :
+     #veil (6) < #doc-overlay (7) < #nav-bar (8) < #doc-btns (9)
+   L'overlay recouvre la scène et capte le clic « n'importe où » pour se
+   fermer, MAIS reste sous les boutons documents et la barre de navigation,
+   qui demeurent donc cliquables. Cliquer un autre bouton bascule le contenu.
+
+   MISE EN PAGE : la zone utile évite les régions déjà occupées —
+     · droite : la colonne des boutons (width_max 280px + marge 3.5%)
+     · haut   : titre + sous-titre
+     · bas    : barre de navigation (bottom 5% + hauteur de bouton)
+   D'où des paddings asymétriques exprimés en clamp(), stables du grand écran
+   au téléphone en paysage.
+   ══════════════════════════════════════════════════════════════════ */
+
+#doc-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#doc-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.doc-ov-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 42% 50%, rgba(8, 8, 8, 0.82) 0%, rgba(0, 0, 0, 0.93) 100%);
+}
+
+.doc-ov-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* haut · droite (colonne de boutons) · bas (navbar) · gauche */
+  padding:
+    clamp(64px, 13vh, 150px)
+    clamp(150px, 24vw, 340px)
+    clamp(70px, 15vh, 170px)
+    clamp(24px, 7vw, 110px);
+}
+
+.doc-ov-inner {
+  width: 100%;
+  max-width: 1180px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── « À Propos » — texte seul ─────────────────────────────────────── */
+
+.doc-ov-text {
+  width: 100%;
+  max-width: 74ch;
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 0.6em;              /* respiration pour l'ascenseur */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.doc-ov-text::-webkit-scrollbar        { width: 3px; }
+.doc-ov-text::-webkit-scrollbar-thumb  { background: rgba(255, 255, 255, 0.22); }
+.doc-ov-text::-webkit-scrollbar-track  { background: transparent; }
+
+.doc-ov-text p {
+  margin: 0 0 1.15em;
+  color: rgba(255, 255, 255, 0.94);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(0.98rem, 1.32vw, 1.5rem);
+  font-weight: 300;
+  line-height: 1.78;
+  letter-spacing: 0.012em;
+  text-wrap: pretty;
+  text-shadow: 0 0 26px rgba(0, 0, 0, 0.85);
+
+  /* Apparition cinématographique, en cascade (classe .in posée par le JS) */
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 1.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 1.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.doc-ov-text p.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Le premier paragraphe porte la question inaugurale : on l'accentue. */
+.doc-ov-text p:first-child {
+  color: rgba(255, 255, 255, 0.99);
+  font-style: italic;
+  font-size: clamp(1.06rem, 1.5vw, 1.72rem);
+  margin-bottom: 1.5em;
+}
+
+.doc-ov-text p:last-child { margin-bottom: 0; }
+
+/* ── Documents — cadres + légende ──────────────────────────────────── */
+
+.doc-ov-figure {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;                      /* autorise le rétrécissement en flex */
+}
+
+.doc-ov-row {
+  display: flex;
+  gap: clamp(14px, 2.4vw, 40px);
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+
+/* Une seule image : cadre borné, jamais étiré */
+.doc-ov-row:not(.is-pair):not(.is-embed) .doc-ov-frame {
+  max-width: min(760px, 100%);
+}
+
+/* Deux images côte à côte : parts égales */
+.doc-ov-row.is-pair .doc-ov-frame { flex: 1 1 0; min-width: 0; }
+
+/* Incrustation : le cadre porte son ratio (défini en JS depuis la config) */
+.doc-ov-row.is-embed .doc-ov-frame {
+  width: 100%;
+  max-width: 1080px;
+  height: auto;
+  max-height: 100%;
+}
+
+.doc-ov-frame {
+  position: relative;
+  height: clamp(150px, 50vh, 620px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.doc-ov-row.is-embed .doc-ov-frame { height: auto; }
+
+/* SVG du cadre : superposé, non cliquable */
+.doc-ov-frame-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.doc-ov-rect {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.80);
+  stroke-width: 1;
+  /* Ni pathLength ni vector-effect:non-scaling-stroke — combinés, ils font
+     ignorer pathLength au navigateur et le tracé se fend. Le périmètre est
+     calculé en pixels réels par le JS, après mise en page. */
+}
+
+/* Média : image ou incrustation, révélé après le tracé */
+.doc-ov-media {
+  opacity: 0;
+  transition: opacity 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.doc-ov-media.in { opacity: 1; }
+
+.doc-ov-frame img.doc-ov-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;                      /* l'image ne touche pas le trait */
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.doc-ov-frame iframe.doc-ov-embed {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #0b0b0b;
+}
+
+.doc-ov-row.is-embed .doc-ov-frame iframe.doc-ov-embed {
+  aspect-ratio: inherit;
+}
+
+/* Repli : image absente, ou site non incrustable / écran tactile */
+.doc-ov-missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 160px;
+  padding: 2em;
+  color: rgba(255, 255, 255, 0.70);
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.62rem, 0.86vw, 0.8rem);
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.doc-ov-missing a {
+  color: rgba(255, 220, 120, 0.95);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 220, 120, 0.35);
+  padding-bottom: 2px;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.doc-ov-missing a:hover {
+  color: rgba(255, 235, 175, 1);
+  border-color: rgba(255, 220, 120, 0.9);
+}
+
+/* ── Légende + source ──────────────────────────────────────────────── */
+
+.doc-ov-caption {
+  margin-top: clamp(12px, 2.2vh, 26px);
+  max-width: 80ch;
+  text-align: center;
+
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.doc-ov-caption.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.doc-ov-cap-text {
+  display: block;
+  color: rgba(255, 255, 255, 0.80);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(0.8rem, 1.05vw, 1.12rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.6;
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+.doc-ov-source {
+  display: inline-block;
+  margin-top: 0.85em;
+  color: rgba(210, 175, 90, 0.92);
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.56rem, 0.74vw, 0.72rem);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(210, 175, 90, 0.3);
+  padding-bottom: 3px;
+  pointer-events: auto;
+  transition: color 0.35s ease, border-color 0.35s ease;
+}
+
+.doc-ov-source:hover {
+  color: rgba(255, 230, 150, 1);
+  border-color: rgba(255, 220, 120, 0.85);
+}
+
+/* ── Téléphone en paysage : hauteur rare, on comprime ──────────────── */
+
+@media (max-height: 520px) {
+  .doc-ov-stage {
+    padding:
+      clamp(40px, 11vh, 70px)
+      clamp(130px, 22vw, 200px)
+      clamp(44px, 13vh, 76px)
+      clamp(18px, 5vw, 44px);
+  }
+  .doc-ov-frame       { height: clamp(120px, 46vh, 320px); }
+  .doc-ov-text p      { font-size: clamp(0.84rem, 2.1vw, 1rem); line-height: 1.62; margin-bottom: 0.9em; }
+  .doc-ov-text p:first-child { font-size: clamp(0.9rem, 2.4vw, 1.1rem); margin-bottom: 1.1em; }
+  .doc-ov-caption     { margin-top: 10px; }
+  .doc-ov-cap-text    { font-size: clamp(0.68rem, 1.7vw, 0.86rem); line-height: 1.45; }
+  .doc-ov-source      { margin-top: 0.55em; letter-spacing: 0.16em; }
+  .doc-ov-row         { gap: clamp(10px, 1.8vw, 20px); }
+}
+
+/* Écran étroit : la paire de planches reste côte à côte (comparaison), mais
+   les marges latérales se réduisent pour lui rendre de la largeur. */
+@media (max-width: 760px) {
+  .doc-ov-stage {
+    padding-left:  clamp(12px, 3vw, 28px);
+    padding-right: clamp(110px, 30vw, 170px);
+  }
+  .doc-ov-frame img.doc-ov-media { padding: 6px; }
+}
+
+/* Mouvement réduit : on garde les apparitions, sans translation. */
+@media (prefers-reduced-motion: reduce) {
+  .doc-ov-text p,
+  .doc-ov-caption { transform: none; transition-duration: 400ms; }
+  .doc-ov-rect    { transition: none !important; }
+}
