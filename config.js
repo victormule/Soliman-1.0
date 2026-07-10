@@ -64,7 +64,7 @@ window.CONFIG = {
       // Marge depuis le haut, en fraction de min(largeur, hauteur) du viewport.
       // PLUS PETIT = FLÈCHE PLUS HAUTE.   0.05 = ancienne valeur
       //   0.05 → basse   ·   0.035 → actuelle   ·   0.02 → très haute
-      margin_pct:       0.035,
+      margin_pct:       0.025,
     },
 
     docs: {
