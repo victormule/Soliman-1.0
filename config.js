@@ -359,7 +359,7 @@ window.CONFIG = {
       poster: 'images/doc-3-poster.jpg',   // écran tactile : image fixe
       ratio:  '16 / 9',
       caption: 'Film des frères Lumière, l\u2019assassinat de Kléber — janvier 1898',
-      source: { label: 'Ouvrir le catalogue Lumière', href: 'https://catalogue-lumiere.com/assassinat-de-kleber/' },
+      source: { label: 'Ouvrir la page Catalogue Lumière', href: 'https://catalogue-lumiere.com/assassinat-de-kleber/' },
     },
 
     'doc-4': {
@@ -370,7 +370,7 @@ window.CONFIG = {
       fill:  true,
       ratio: '4 / 3',   // conservé comme repli si `fill` est retiré
       caption: 'Lettre au président de la République du collectif Abounaddara au sujet du « Syrien fanatique » — octobre 2022',
-      source: { label: 'Ouvrir la lettre sur Débordements', href: 'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/' },
+      source: { label: 'Ouvrir la page Débordements', href: 'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/' },
     },
   },
 
