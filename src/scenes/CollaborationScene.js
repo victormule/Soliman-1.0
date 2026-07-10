@@ -247,18 +247,7 @@ export class CollaborationScene extends Scene {
     bus.emit('scene:exited', { name: 'collaboration' });
   }
 
-  /**
-   * Gère la navigation par molette / scroll si elle est activée.
-   *
-   * Convention actuelle :
-   *   - scroll vers le haut => retour vers la phrénologie.
-   *
-   * @param {'up'|'down'} direction - Sens de défilement normalisé par le système.
-   */
-  handleScroll(direction) {
-    if (!this._navigationActive) return;
-    if (direction === 'up') bus.emit('navigate', { to: 'phrenologie' });
-  }
+
 
   /**
    * Recalcule les dimensions des composants dépendants du viewport.
