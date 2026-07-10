@@ -309,24 +309,7 @@ export class PhrenologieScene extends Scene {
     bus.emit('scene:exited', { name: 'phrenologie' });
   }
 
-  /**
-   * Navigation au scroll.
-   *
-   * Convention actuelle :
-   *   - scroll vers le haut   → retour vers la vitrine
-   *   - scroll vers le bas    → aller vers collaboration
-   *
-   * La navigation reste conditionnée par `_navigationActive` afin d'empêcher les
-   * transitions pendant les animations d'entrée / sortie.
-   *
-   * @param {'up'|'down'} direction
-   */
-  handleScroll(direction) {
-    if (!this._navigationActive) return;
 
-    if (direction === 'up')   bus.emit('navigate', { to: 'vitrine' });
-    if (direction === 'down') bus.emit('navigate', { to: 'collaboration' });
-  }
 
   /**
    * Gestion du resize viewport.
