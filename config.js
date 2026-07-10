@@ -82,9 +82,15 @@ window.CONFIG = {
       draw_duration:     850,   // Dessin SVG de chaque bouton (ms)
       hide_duration:     600,
 
-      // Contenu
+      // ── Bouton « À Propos » ────────────────────────────────────────────
+      // Placé AU-DESSUS de la colonne des documents, même gabarit et même
+      // animation de tracé SVG, séparé par un espacement plus généreux.
+      about_label:  'À Propos',
+      about_gap_vh: 5.0,   // espacement sous « À Propos » (% vh), > gap_vh
+
+      // Contenu — chaque action est une clé de CONFIG.DOCUMENTS
       labels:  ['Document 1', 'Document 2', 'Document 3', 'Document 4'],
-      actions: [null, null, null, null],  // null = placeholder, 'collab' = aller Collaboration
+      actions: ['doc-1', 'doc-2', 'doc-3', 'doc-4'],
     },
 
     navbar: {
@@ -92,7 +98,11 @@ window.CONFIG = {
       appear_at:        7000,   // ms depuis enter() — régler ici indépendamment
 
       // Layout
-      width:            0.80,   // Fraction largeur écran
+      width:            0.80,   // Fraction largeur écran (plafond absolu)
+      cell_width:       0.26,   // Largeur idéale d'UNE cellule (fraction vW).
+                                // La barre vaut min(width·vW, N·cell_width·vW) :
+                                // en passant de 3 à 2 boutons elle se resserre au
+                                // lieu d'étirer démesurément chaque cellule.
       bottom:           0.05,   // Position bas (fraction hauteur)
       height:           0.08,   // Hauteur (fraction hauteur)
 
@@ -112,8 +122,9 @@ window.CONFIG = {
       btn_letter_spacing:'0.18em',
 
       // Contenu
-      labels:  ['Carnet de Recherche', 'Collaboration', 'À Propos'],
-      actions: [null, 'collab', null],  // 'collab' = aller Collaboration
+      // « À Propos » a migré dans la colonne des boutons documents.
+      labels:  ['Carnet de Recherche', 'Collaboration'],
+      actions: [null, 'collab'],  // 'collab' = aller Collaboration
     },
 
     timing: {
@@ -281,6 +292,77 @@ window.CONFIG = {
       { img: 'himg-8', label: '25',            l: 19, t: 23, w: 11, h: 20, media: 'Collaboration/Chapitre1/Klaxon.mp3'   },
       { img: 'himg-9', label: 'Nez',           l: 38, t: 62, w: 22, h: 22, media: 'Collaboration/Chapitre1/S3.mp3'       },
     ],
+  },
+
+
+/* ══════════════════════════════════════════════════════════════════
+   DOCUMENTS — contenus affichés par DocumentOverlay (scène phrénologie)
+   ──────────────────────────────────────────────────────────────────
+   Chaque clé correspond à une entrée de PHRENOLOGIE.docs.actions
+   (+ la clé 'about' pour le bouton « À Propos »).
+
+   types :
+     'text'   → paragraphes (aucun cadre)
+     'images' → 1 ou 2 cadres tracés puis images en fondu
+     'embed'  → cadre tracé puis site incrusté (iframe)
+
+   `poster` : image de repli affichée à la place de l'iframe sur écran
+              tactile (téléphone), où la navigation dans un site incrusté
+              est inconfortable. Si le fichier est absent, une carte avec
+              lien de consultation est affichée à la place.
+   ══════════════════════════════════════════════════════════════════ */
+
+  DOCUMENTS: {
+
+    about: {
+      type: 'text',
+      paragraphs: [
+        'Que faire du corps de Soliman al-Halabi, assassin présumé du général Kléber, qui demeure sans sépulture depuis sa condamnation à mort par la justice française en 1800 ?',
+        'Le corps de cet écrivain public originaire d\u2019Alep a été ramené en France dans les bagages de l\u2019expédition d\u2019Égypte (1798-1801). Il a été remis au Muséum national d\u2019Histoire naturelle qui l\u2019a exposé dans ses vitrines jusque dans les années 1980.',
+        'Entretemps, le corps de Soliman al-Halabi a été érigé en représentant d\u2019une nation ou une religion.',
+        'En France, il a intégré les collections publiques en tant que spécimen de « Syrien fanatique ». De l\u2019autre côté de la Méditerranée, il a été élevé au rang de relique de héros national ou martyr religieux.',
+        'Que faire de ce corps à l\u2019état de squelette qui se tient au travers de la commune humanité ? Telle est la question soulevée par le présent site qui est né d\u2019une recherche collaborative réunissant des chercheurs, lycéens et étudiants français. Et cela à l\u2019initiative du collectif syrien Abounaddara, avec le soutien de l\u2019Agence Nationale de la Recherche, et France-Berkeley Fund.',
+      ],
+    },
+
+    'doc-1': {
+      type: 'images',
+      // Ordre d'affichage : gauche → droite.
+      frames: [
+        { src: 'images/doc-1-b.jpg', alt: 'Recueil des pièces, planche b' },
+        { src: 'images/doc-1-a.jpg', alt: 'Recueil des pièces, planche a' },
+      ],
+      caption: 'Extrait du recueil des pièces relatives à la procédure et au jugement de Soleyman El-Hhaleby, assassin du général en chef Kléber',
+      source: {
+        label: 'Source — Gallica (BnF)',
+        href:  'https://gallica.bnf.fr/ark:/12148/bpt6k63439128.r=recueil%20des%20pi%C3%A8ces%20relatives%20%C3%A0%20la%20proc%C3%A9dure%20et%20au%20jugement%20de%20SOLEYMAN%20EL-HHALEBY%2C%20assassin%20du%20GENERAL%20EN%20CHEF%20KLEBER%2C?rk=21459;2',
+      },
+    },
+
+    'doc-2': {
+      type: 'images',
+      frames: [
+        { src: 'images/doc-2.jpg', alt: 'Catalogue des préparations anatomiques' },
+      ],
+      caption: 'Extrait du « Catalogue des préparations anatomiques du cabinet d\u2019anatomie comparée du Muséum d\u2019Histoire naturelle » de Paris — squelette entré en 1806 dans le cabinet de Georges Cuvier (1769-1832).',
+    },
+
+    'doc-3': {
+      type: 'embed',
+      url:    'https://catalogue-lumiere.com/assassinat-de-kleber/',
+      poster: 'images/doc-3-poster.jpg',   // écran tactile : image fixe
+      ratio:  '16 / 9',
+      caption: 'Film des frères Lumière, l\u2019assassinat de Kléber — janvier 1898',
+      source: { label: 'Ouvrir le catalogue Lumière', href: 'https://catalogue-lumiere.com/assassinat-de-kleber/' },
+    },
+
+    'doc-4': {
+      type: 'embed',
+      url:   'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/',
+      ratio: '4 / 3',
+      caption: 'Lettre au président de la République du collectif Abounaddara au sujet du « Syrien fanatique » — octobre 2022',
+      source: { label: 'Ouvrir la lettre sur Débordements', href: 'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/' },
+    },
   },
 
 
