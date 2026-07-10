@@ -541,7 +541,14 @@ body.peine-aim #cursor.hotspot::after {
 }
 
 #nav-bar.visible {
-  pointer-events: auto;
+  /* ⚠️ Le conteneur est dimensionné en PLEIN ÉCRAN par NavigationBar.draw()
+     (width = vW, height = vH) et vit en z-index 8, donc au-dessus de
+     #doc-overlay (7). En `pointer-events: auto` il interceptait TOUS les clics
+     et la molette de la page : les documents ne se fermaient plus au clic et
+     les sites incrustés devenaient inertes.
+     `pointer-events` étant héritée, on neutralise le conteneur et on ne
+     réactive que .nav-btn-zone (ci-dessous). */
+  pointer-events: none;
   opacity: 1;
 }
 
@@ -557,6 +564,8 @@ body.peine-aim #cursor.hotspot::after {
 
 .nav-btn-zone {
   cursor: none;
+  /* Réactive la capture sur les seules cellules cliquables : le reste du SVG
+     plein écran laisse passer clics et molette (pointer-events est héritée). */
   pointer-events: auto;
 }
 
@@ -586,12 +595,15 @@ body.peine-aim #cursor.hotspot::after {
 }
 
 #doc-btns.visible {
-  pointer-events: auto;
+  /* Seuls les boutons captent : un clic dans les gouttières de la colonne doit
+     atteindre l'overlay et refermer le document. */
+  pointer-events: none;
   opacity: 1;
 }
 
 .doc-btn {
   position: relative;
+  pointer-events: auto;
   cursor: pointer;
   transform-origin: center center;
   will-change: transform;
