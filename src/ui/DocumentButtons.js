@@ -1,6 +1,17 @@
 /**
  * DocumentButtons.js
- * Boutons documents phréno avec animation SVG
+ * Colonne haut-droite de la scène phrénologie.
+ *
+ *   [ À Propos ]     ← même gabarit et même tracé SVG que les documents,
+ *                       détaché par un espacement plus généreux (about_gap_vh)
+ *   [ Document 1 ]
+ *   [ Document 2 ]
+ *   [ Document 3 ]
+ *   [ Document 4 ]
+ *
+ * « À Propos » partage toute la mécanique des autres boutons (rectangle tracé
+ * par stroke-dashoffset, libellé en fondu, hover doré, poussée des voisins) :
+ * il est simplement le premier de la cascade d'apparition.
  */
 
 import { unifyFontSize, applyGoldenHover, applyNeighborPush, clearNeighborPush } from '../utils/helpers.js';
@@ -28,6 +39,12 @@ export class DocumentButtons {
     };
   }
 
+  /** Libellés affichés, « À Propos » en tête. */
+  _allLabels() {
+    const D = this.config.DOCS;
+    return [D.about_label ?? 'À Propos', ...D.labels];
+  }
+
   /**
    * Construit le DOM des boutons
    */
@@ -51,14 +68,21 @@ export class DocumentButtons {
     this.el.style.top = (D.top_pct ?? 3.2) + '%';
     this.el.style.gap = Math.max(4, Math.round(vH * (D.gap_vh ?? 1.8) / 100)) + 'px';
 
+    // Respiration sous « À Propos » : nettement supérieure au gap courant, pour
+    // le détacher du groupe des documents. Exprimée en vh → suit le viewport.
+    const aboutGap = Math.max(10, Math.round(vH * (D.about_gap_vh ?? 5.0) / 100));
+
+    const labels = this._allLabels();
+
     if (animate) {
       // Construction complète
       this.el.innerHTML = '';
-      this.config.DOCS.labels.forEach((label, i) => {
+      labels.forEach((label, i) => {
         const btn = document.createElement('div');
-        btn.className = 'doc-btn';
+        btn.className = 'doc-btn' + (i === 0 ? ' doc-btn--about' : '');
         btn.style.width = w + 'px';
         btn.style.height = h + 'px';
+        if (i === 0) btn.style.marginBottom = aboutGap + 'px';
         btn.innerHTML = `
           <svg width="${w}" height="${h}">
             <rect class="doc-rect"
@@ -75,9 +99,10 @@ export class DocumentButtons {
       });
     } else {
       // Resize seulement
-      this.el.querySelectorAll('.doc-btn').forEach((btn) => {
+      this.el.querySelectorAll('.doc-btn').forEach((btn, i) => {
         btn.style.width = w + 'px';
         btn.style.height = h + 'px';
+        if (i === 0) btn.style.marginBottom = aboutGap + 'px';
         const rect = btn.querySelector('.doc-rect');
         const label = btn.querySelector('.doc-label');
         const svg = btn.querySelector('svg');
@@ -125,21 +150,24 @@ export class DocumentButtons {
   }
 
   /**
-   * Affiche avec animation
+   * Affiche avec animation.
+   * @param {Function[]} onClickCallbacks un callback par DOCUMENT, dans l'ordre
+   *                                      de CONFIG.DOCS.labels
+   * @param {Function}   onAboutClick     callback du bouton « À Propos »
    */
-  show(onClickCallbacks) {
+  show(onClickCallbacks, onAboutClick) {
     this.buildDOM(true);
     this.el.style.opacity = '';
     this.el.classList.add('visible');
 
     const allBtns = this.attachHover();
 
-    // Attacher clicks
-    if (onClickCallbacks) {
-      allBtns.forEach((btn, i) => {
-        btn.onclick = () => onClickCallbacks[i]?.();
-      });
-    }
+    // Index 0 = « À Propos », puis les documents (décalage de 1).
+    allBtns.forEach((btn, i) => {
+      btn.onclick = (i === 0)
+        ? () => onAboutClick?.()
+        : () => onClickCallbacks?.[i - 1]?.();
+    });
 
     // Animation cascade
     allBtns.forEach((btn, i) => {
