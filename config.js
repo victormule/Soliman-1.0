@@ -341,7 +341,7 @@ window.CONFIG = {
       caption: 'Extrait du recueil des pièces relatives à la procédure et au jugement de Soleyman El-Hhaleby, assassin du général en chef Kléber',
       source: {
         label: 'Source — Gallica (BnF)',
-        href:  'https://gallica.bnf.fr/ark:/12148/bpt6k63439128.r=recueil%20des%20pi%C3%A8ces%20relatives%20%C3%A0%20la%20proc%C3%A9dure%20et%20au%20jugement%20de%20SOLEYMAN%20EL-HHALEBY%2C%20assassin%20du%20GENERAL%20EN%20CHEF%20KLEBER%2C?rk=21459;2',
+        href:  'https://heritage.bnf.fr/bibliothequesorient/recueil-pieces-relatives-procedure-et-au-jugement-soleyman-el-hhaleby-assassin-general-en-chef',
       },
     },
 
