@@ -12,6 +12,16 @@ export class NavigationBar {
     this.el = document.getElementById('nav-bar');
     this.drawn = false;
     this.animRaf = null;
+
+    /**
+     * Callbacks de clic mémorisés lors de show().
+     * draw() RECONSTRUIT tout le SVG : sans cette mémorisation, un resize()
+     * appelé sans arguments (c'est le cas depuis PhrenologieScene.onResize)
+     * recréait des zones sans gestionnaire de clic — les boutons « Carnet de
+     * Recherche » et « Collaboration » devenaient alors silencieusement
+     * inertes, y compris après un simple passage en plein écran.
+     */
+    this._callbacks = null;
   }
 
   /**
@@ -215,6 +225,7 @@ export class NavigationBar {
    * Affiche avec animation
    */
   show(onClickCallbacks) {
+    this._callbacks = onClickCallbacks ?? null;
     this.draw(true, onClickCallbacks);
     this.el.style.opacity = '';
     setTimeout(() => {
@@ -226,6 +237,7 @@ export class NavigationBar {
    * Cache
    */
   hide() {
+    this._callbacks = null;
     this.el.style.transition = 'opacity 900ms ease';
     this.el.style.opacity = '0';
     this.el.classList.remove('visible');
@@ -240,8 +252,10 @@ export class NavigationBar {
    * Redimensionne
    */
   resize(onClickCallbacks) {
-    if (this.drawn) {
-      this.draw(false, onClickCallbacks);
-    }
+    if (!this.drawn) return;
+    // Réutilise les callbacks de show() si l'appelant n'en fournit pas.
+    const cbs = onClickCallbacks ?? this._callbacks;
+    if (onClickCallbacks) this._callbacks = onClickCallbacks;
+    this.draw(false, cbs);
   }
 }
