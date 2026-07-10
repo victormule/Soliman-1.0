@@ -109,31 +109,12 @@ bus.on('navigate', ({ to }) => manager.go(to));
 bus.on('player:open', ({ src, label }) => player.open(src, label));
 player.setOnClose((prevTitle) => bus.emit('player:close', { prevTitle }));
 
-/* ── 10. Scroll ──────────────────────────────────────────────── */
-let lastWheel = 0;
-let lastTouch = { y: null, t: 0 };
-
-window.addEventListener('wheel', e => {
-  const now = Date.now();
-  if (now - lastWheel < 800) return;
-  lastWheel = now;
-  manager.currentScene?.handleScroll?.(e.deltaY > 0 ? 'down' : 'up');
-}, { passive: true });
-
-window.addEventListener('touchstart', e => {
-  if (e.touches[0]) lastTouch = { y: e.touches[0].clientY, t: Date.now() };
-}, { passive: true });
-
-window.addEventListener('touchend', e => {
-  if (!lastTouch.y || !e.changedTouches[0]) return;
-  const dy = lastTouch.y - e.changedTouches[0].clientY;
-  if (Date.now() - lastTouch.t > 400 || Math.abs(dy) < 40) return;
-  const now = Date.now();
-  if (now - lastWheel < 800) return;
-  lastWheel = now;
-  manager.currentScene?.handleScroll?.(dy > 0 ? 'down' : 'up');
-  lastTouch = { y: null, t: 0 };
-}, { passive: true });
+/* ── 10. Scroll ──────────────────────────────────────────────
+   Navigation au scroll SUPPRIMÉE.
+   La molette et le glissé ne changent plus de scène : ils sont réservés au
+   contenu (défilement d'un site incrusté dans un document, par exemple).
+   La navigation passe exclusivement par les flèches, les cercles romains,
+   la barre de navigation et les boutons.                                   */
 
 /* ── 11. Resize ──────────────────────────────────────────────── */
 window.addEventListener('resize', () => {
