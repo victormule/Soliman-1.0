@@ -36,9 +36,10 @@
  * rendu, de leurs animations internes et de leur nettoyage.
  */
 
-import { Scene }     from '../core/Scene.js';
-import { bus }       from '../core/EventBus.js';
-import { ArrowMenu } from '../ui/ArrowMenu.js';
+import { Scene }            from '../core/Scene.js';
+import { bus }              from '../core/EventBus.js';
+import { ArrowMenu }        from '../ui/ArrowMenu.js';
+import { DocumentOverlay }  from '../ui/DocumentOverlay.js';
 
 export class PhrenologieScene extends Scene {
   /**
@@ -88,6 +89,14 @@ export class PhrenologieScene extends Scene {
      * prématurée pendant les animations d'entrée.
      */
     this._navigationActive = false;
+
+    /**
+     * Affichage des documents et du texte « À Propos ».
+     * Posé en z-index 7 : sous #nav-bar (8) et #doc-btns (9), donc les boutons
+     * restent cliquables pendant qu'un document est ouvert, et un clic ailleurs
+     * referme. L'overlay crée son DOM à la première ouverture seulement.
+     */
+    this._docOverlay = new DocumentOverlay(window.CONFIG);
   }
 
   /**
@@ -203,12 +212,20 @@ export class PhrenologieScene extends Scene {
          * Le garde-fou `_navigationActive` reste présent ici aussi, afin que le
          * composant puisse apparaître visuellement avant d'être réellement actif.
          */
+        /**
+         * Chaque `action` est une clé de CONFIG.DOCUMENTS ('doc-1'…'doc-4').
+         * Rappeler la clé déjà ouverte referme (bascule) ; cliquer un autre
+         * bouton remplace le contenu affiché.
+         */
         const docCallbacks = C.docs.actions.map((action) => () => {
-          if (!this._navigationActive) return;
-          if (action === 'collab') bus.emit('navigate', { to: 'collaboration' });
+          if (!this._navigationActive || !action) return;
+          this._docOverlay.open(action);
         });
 
-        this.docBtns.show(docCallbacks);
+        this.docBtns.show(
+          docCallbacks,
+          () => { if (this._navigationActive) this._docOverlay.open('about'); }
+        );
       });
 
       // ─────────────────────────────────────────────────────────────────────
@@ -275,6 +292,9 @@ export class PhrenologieScene extends Scene {
     await super.exit(params);
 
     // Masquage des composants propres à la scène.
+    // L'overlay est DÉTRUIT (et non simplement fermé) : son DOM, ses timers et
+    // ses éventuelles incrustations ne doivent rien laisser derrière eux.
+    this._docOverlay.destroy();
     this._arrow.hide();
     this.docBtns.hide();
     this.navBar.hide();
@@ -324,6 +344,7 @@ export class PhrenologieScene extends Scene {
     this._arrow.resize();
     this.docBtns.resize();
     this.navBar.resize();
+    this._docOverlay.resize();   // retrace les cadres aux nouvelles dimensions
 
     const titleEl = document.getElementById('site-title');
     if (titleEl && titleEl.innerHTML) {
