@@ -326,6 +326,11 @@ export class DocumentOverlay {
     const entry = this._frames[this._frames.length - 1];
     entry.ratio = this._parseRatio(data.ratio) ?? (16 / 9);
 
+    // `fill: true` → le cadre occupe TOUTE la zone disponible au lieu de suivre
+    // un ratio. À hauteur commune, un cadre 4/3 est 25 % plus étroit qu'un 16/9 :
+    // pour une page web incrustée (texte long), on veut la largeur maximale.
+    entry.fill = !!data.fill;
+
     const coarse = window.matchMedia?.('(pointer: coarse)').matches;
 
     if (coarse) {
@@ -412,7 +417,7 @@ export class DocumentOverlay {
       <svg class="doc-ov-frame-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <rect class="doc-ov-rect" x="0.5" y="0.5"/>
       </svg>`;
-    this._frames.push({ el, ratio: null });
+    this._frames.push({ el, ratio: null, fill: false });
     return el;
   }
 
@@ -430,6 +435,16 @@ export class DocumentOverlay {
     const availW = row.clientWidth;
     const availH = row.clientHeight;
     if (availW < 8 || availH < 8) return;
+
+    // Cadre « pleine zone » (incrustation d'une page web) : pas de ratio imposé.
+    if (this._frames.length === 1 && this._frames[0].fill) {
+      const f = this._frames[0];
+      const w = Math.round(availW), h = Math.round(availH);
+      f.el.style.width  = w + 'px';
+      f.el.style.height = h + 'px';
+      this._drawRect(f.el, w, h, animate, 0);
+      return;
+    }
 
     const gap    = parseFloat(getComputedStyle(row).gap) || 0;
     const gaps   = gap * (this._frames.length - 1);
