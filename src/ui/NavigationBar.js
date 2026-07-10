@@ -30,13 +30,19 @@ export class NavigationBar {
     const bottom = Math.round(H * 0.05);
     const y = H - bottom - h;
 
-    // Largeur centrée
+    const N = C.labels.length;
+
+    // Largeur centrée — ADAPTATIVE AU NOMBRE DE BOUTONS.
+    // Avec une largeur fixe (0.80·W), passer de 3 à 2 boutons étirerait chaque
+    // cellule de 27% à 40% de l'écran : proportions disgracieuses, libellés
+    // perdus au milieu du vide. On borne donc la barre par la largeur idéale
+    // cumulée des cellules (N · cell_width · W). Le plafond C.width et la marge
+    // du bouton plein écran restent respectés.
     const fsBtnW = sz + Math.round(W * 0.035) * 2;
     const maxW = W - Math.round(W * 0.035) - fsBtnW;
-    const bw = Math.min(Math.round(W * C.width), maxW);
+    const idealW = Math.round(N * W * (C.cell_width ?? (C.width / 3)));
+    const bw = Math.min(Math.round(W * C.width), maxW, idealW);
     const x = Math.round((W - bw) / 2);
-
-    const N = C.labels.length;
 
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('width', W);
