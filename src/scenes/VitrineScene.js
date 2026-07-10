@@ -216,16 +216,7 @@ export class VitrineScene extends Scene {
     bus.emit('scene:exited', { name: 'vitrine' });
   }
 
-  handleScroll(direction) {
-    /**
-     * Navigation molette / trackpad.
-     *
-     * Convention de cette scène : seul le scroll vers le bas fait avancer vers
-     * la scène suivante. Toute autre direction est ignorée.
-     */
-    if (!this._navigationActive) return;
-    if (direction === 'down') bus.emit('navigate', { to: 'phrenologie' });
-  }
+
 
   onResize() {
     /**
