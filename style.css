@@ -1277,18 +1277,14 @@ body.peine-aim #cursor.aim-hot {
 /* ══════════════════════════════════════════════════════════════════
    DOCUMENTS & « À PROPOS » — overlay de la scène phrénologie
    ──────────────────────────────────────────────────────────────────
-   EMPILEMENT VOULU :
-     #veil (6) < #doc-overlay (7) < #nav-bar (8) < #doc-btns (9)
-   L'overlay recouvre la scène et capte le clic « n'importe où » pour se
-   fermer, MAIS reste sous les boutons documents et la barre de navigation,
-   qui demeurent donc cliquables. Cliquer un autre bouton bascule le contenu.
+   EMPILEMENT :  #veil (6) < #doc-overlay (7) < #nav-bar (8) < #doc-btns (9)
+   L'overlay capte le clic « n'importe où » pour se fermer tout en laissant
+   boutons et navbar cliquables au-dessus.
 
-   MISE EN PAGE : la zone utile évite les régions déjà occupées —
-     · droite : la colonne des boutons (width_max 280px + marge 3.5%)
-     · haut   : titre + sous-titre
-     · bas    : barre de navigation (bottom 5% + hauteur de bouton)
-   D'où des paddings asymétriques exprimés en clamp(), stables du grand écran
-   au téléphone en paysage.
+   MISE EN PAGE : la zone utile évite les régions occupées —
+     droite : colonne des boutons · haut : titre · bas : barre de navigation.
+   Les cadres sont DIMENSIONNÉS EN JS (hauteur commune, largeurs déduites des
+   ratios réels des médias) : le CSS ne fait que définir la zone disponible.
    ══════════════════════════════════════════════════════════════════ */
 
 #doc-overlay {
@@ -1308,7 +1304,7 @@ body.peine-aim #cursor.aim-hot {
 .doc-ov-backdrop {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 42% 50%, rgba(8, 8, 8, 0.82) 0%, rgba(0, 0, 0, 0.93) 100%);
+  background: radial-gradient(circle at 42% 50%, rgba(8, 8, 8, 0.82) 0%, rgba(0, 0, 0, 0.94) 100%);
 }
 
 .doc-ov-stage {
@@ -1319,50 +1315,57 @@ body.peine-aim #cursor.aim-hot {
   justify-content: center;
   /* haut · droite (colonne de boutons) · bas (navbar) · gauche */
   padding:
-    clamp(64px, 13vh, 150px)
-    clamp(150px, 24vw, 340px)
-    clamp(70px, 15vh, 170px)
-    clamp(24px, 7vw, 110px);
+    clamp(58px, 11vh, 130px)
+    clamp(146px, 23vw, 330px)
+    clamp(64px, 14vh, 160px)
+    clamp(20px, 5vw, 90px);
 }
 
 .doc-ov-inner {
   width: 100%;
-  max-width: 1180px;
-  max-height: 100%;
+  height: 100%;
+  max-width: 1240px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 0;
 }
 
-/* ── « À Propos » — texte seul ─────────────────────────────────────── */
+/* ── « À Propos » ───────────────────────────────────────────────────
+   Aucun ascenseur : la taille de police est calculée par dichotomie pour que
+   le texte tienne exactement dans la zone (voir DocumentOverlay._fitText).
+   Toutes les tailles internes sont en `em` → elles suivent l'ajustement.
+   Le texte prend plus de largeur qu'une colonne de lecture classique, comme
+   demandé, tout en restant sous la barre des 92 caractères.               */
 
 .doc-ov-text {
   width: 100%;
-  max-width: 74ch;
-  max-height: 100%;
-  overflow-y: auto;
-  padding-right: 0.6em;              /* respiration pour l'ascenseur */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
-}
+  max-width: min(1150px, 100%);
+  height: 100%;
+  overflow: hidden;                   /* garantit l'absence de barre */
+  display: flex;
+  align-items: center;                /* centrage vertical du corps */
 
-.doc-ov-text::-webkit-scrollbar        { width: 3px; }
-.doc-ov-text::-webkit-scrollbar-thumb  { background: rgba(255, 255, 255, 0.22); }
-.doc-ov-text::-webkit-scrollbar-track  { background: transparent; }
-
-.doc-ov-text p {
-  margin: 0 0 1.15em;
   color: rgba(255, 255, 255, 0.94);
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(0.98rem, 1.32vw, 1.5rem);
   font-weight: 300;
-  line-height: 1.78;
   letter-spacing: 0.012em;
+  /* font-size et line-height sont posés par le JS */
+}
+
+/* Corps mesurable : sa hauteur propre est comparée à celle de .doc-ov-text.
+   Le centrage vit sur le parent, donc la mesure reste juste même quand le
+   texte déborde pendant la recherche dichotomique. */
+.doc-ov-text-body { width: 100%; }
+
+.doc-ov-text p {
+  margin: 0 0 0.95em;
+  font-size: 1em;
+  line-height: inherit;
   text-wrap: pretty;
   text-shadow: 0 0 26px rgba(0, 0, 0, 0.85);
 
-  /* Apparition cinématographique, en cascade (classe .in posée par le JS) */
   opacity: 0;
   transform: translateY(14px);
   transition:
@@ -1370,70 +1373,52 @@ body.peine-aim #cursor.aim-hot {
     transform 1.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.doc-ov-text p.in {
-  opacity: 1;
-  transform: translateY(0);
-}
+.doc-ov-text p.in { opacity: 1; transform: translateY(0); }
+.doc-ov-text p:last-child { margin-bottom: 0; }
 
-/* Le premier paragraphe porte la question inaugurale : on l'accentue. */
+/* Question inaugurale : accentuée, sans casser l'ajustement (unités em). */
 .doc-ov-text p:first-child {
   color: rgba(255, 255, 255, 0.99);
   font-style: italic;
-  font-size: clamp(1.06rem, 1.5vw, 1.72rem);
-  margin-bottom: 1.5em;
+  font-size: 1.14em;
+  margin-bottom: 1.15em;
 }
 
-.doc-ov-text p:last-child { margin-bottom: 0; }
-
-/* ── Documents — cadres + légende ──────────────────────────────────── */
+/* ── Documents ──────────────────────────────────────────────────────
+   .doc-ov-row occupe TOUTE la hauteur restante (flex:1) : les cadres sont
+   donc au plus grand, et la légende est repoussée tout en bas.            */
 
 .doc-ov-figure {
   margin: 0;
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 0;                      /* autorise le rétrécissement en flex */
-}
-
-.doc-ov-row {
-  display: flex;
-  gap: clamp(14px, 2.4vw, 40px);
-  align-items: stretch;
-  justify-content: center;
-  width: 100%;
   min-height: 0;
 }
 
-/* Une seule image : cadre borné, jamais étiré */
-.doc-ov-row:not(.is-pair):not(.is-embed) .doc-ov-frame {
-  max-width: min(760px, 100%);
-}
-
-/* Deux images côte à côte : parts égales */
-.doc-ov-row.is-pair .doc-ov-frame { flex: 1 1 0; min-width: 0; }
-
-/* Incrustation : le cadre porte son ratio (défini en JS depuis la config) */
-.doc-ov-row.is-embed .doc-ov-frame {
+.doc-ov-row {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  max-width: 1080px;
-  height: auto;
-  max-height: 100%;
+  display: flex;
+  gap: clamp(14px, 2.2vw, 38px);
+  align-items: center;
+  justify-content: center;
 }
 
+/* Dimensions posées en JS (width/height en px, déduits du ratio du média). */
 .doc-ov-frame {
   position: relative;
-  height: clamp(150px, 50vh, 620px);
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.32);
 }
 
-.doc-ov-row.is-embed .doc-ov-frame { height: auto; }
-
-/* SVG du cadre : superposé, non cliquable */
 .doc-ov-frame-svg {
   position: absolute;
   inset: 0;
@@ -1446,14 +1431,12 @@ body.peine-aim #cursor.aim-hot {
 
 .doc-ov-rect {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.80);
+  stroke: rgba(255, 255, 255, 0.82);
   stroke-width: 1;
-  /* Ni pathLength ni vector-effect:non-scaling-stroke — combinés, ils font
-     ignorer pathLength au navigateur et le tracé se fend. Le périmètre est
-     calculé en pixels réels par le JS, après mise en page. */
+  /* Ni pathLength ni vector-effect:non-scaling-stroke : combinés, le tracé se
+     fend. Le périmètre est calculé en pixels réels par le JS. */
 }
 
-/* Média : image ou incrustation, révélé après le tracé */
 .doc-ov-media {
   opacity: 0;
   transition: opacity 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -1461,12 +1444,12 @@ body.peine-aim #cursor.aim-hot {
 
 .doc-ov-media.in { opacity: 1; }
 
+/* Le cadre épouse l'image : `contain` ne rogne rien et ne laisse pas de vide. */
 .doc-ov-frame img.doc-ov-media {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 10px;                      /* l'image ne touche pas le trait */
   -webkit-user-drag: none;
   user-select: none;
 }
@@ -1479,17 +1462,14 @@ body.peine-aim #cursor.aim-hot {
   background: #0b0b0b;
 }
 
-.doc-ov-row.is-embed .doc-ov-frame iframe.doc-ov-embed {
-  aspect-ratio: inherit;
-}
-
-/* Repli : image absente, ou site non incrustable / écran tactile */
+/* Repli : image absente, site non incrustable, ou écran tactile. */
 .doc-ov-missing {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 160px;
+  height: 100%;
+  min-height: 140px;
   padding: 2em;
   color: rgba(255, 255, 255, 0.70);
   font-family: 'Cinzel', serif;
@@ -1512,11 +1492,12 @@ body.peine-aim #cursor.aim-hot {
   border-color: rgba(255, 220, 120, 0.9);
 }
 
-/* ── Légende + source ──────────────────────────────────────────────── */
+/* ── Légende + source, en bas de zone ──────────────────────────────── */
 
 .doc-ov-caption {
-  margin-top: clamp(12px, 2.2vh, 26px);
-  max-width: 80ch;
+  flex: 0 0 auto;
+  margin-top: clamp(16px, 2.8vh, 34px);
+  max-width: 84ch;
   text-align: center;
 
   opacity: 0;
@@ -1526,25 +1507,22 @@ body.peine-aim #cursor.aim-hot {
     transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.doc-ov-caption.in {
-  opacity: 1;
-  transform: translateY(0);
-}
+.doc-ov-caption.in { opacity: 1; transform: translateY(0); }
 
 .doc-ov-cap-text {
   display: block;
   color: rgba(255, 255, 255, 0.80);
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(0.8rem, 1.05vw, 1.12rem);
+  font-size: clamp(0.8rem, 1.02vw, 1.1rem);
   font-style: italic;
   font-weight: 300;
-  line-height: 1.6;
+  line-height: 1.55;
   text-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
 }
 
 .doc-ov-source {
   display: inline-block;
-  margin-top: 0.85em;
+  margin-top: 0.8em;
   color: rgba(210, 175, 90, 0.92);
   font-family: 'Cinzel', serif;
   font-size: clamp(0.56rem, 0.74vw, 0.72rem);
@@ -1563,36 +1541,32 @@ body.peine-aim #cursor.aim-hot {
   border-color: rgba(255, 220, 120, 0.85);
 }
 
-/* ── Téléphone en paysage : hauteur rare, on comprime ──────────────── */
+/* ── Téléphone en paysage : la hauteur est la ressource rare ────────── */
 
 @media (max-height: 520px) {
   .doc-ov-stage {
     padding:
-      clamp(40px, 11vh, 70px)
-      clamp(130px, 22vw, 200px)
-      clamp(44px, 13vh, 76px)
-      clamp(18px, 5vw, 44px);
+      clamp(34px, 9vh, 60px)
+      clamp(126px, 21vw, 190px)
+      clamp(38px, 11vh, 66px)
+      clamp(14px, 4vw, 36px);
   }
-  .doc-ov-frame       { height: clamp(120px, 46vh, 320px); }
-  .doc-ov-text p      { font-size: clamp(0.84rem, 2.1vw, 1rem); line-height: 1.62; margin-bottom: 0.9em; }
-  .doc-ov-text p:first-child { font-size: clamp(0.9rem, 2.4vw, 1.1rem); margin-bottom: 1.1em; }
-  .doc-ov-caption     { margin-top: 10px; }
-  .doc-ov-cap-text    { font-size: clamp(0.68rem, 1.7vw, 0.86rem); line-height: 1.45; }
-  .doc-ov-source      { margin-top: 0.55em; letter-spacing: 0.16em; }
-  .doc-ov-row         { gap: clamp(10px, 1.8vw, 20px); }
+  .doc-ov-caption   { margin-top: 10px; }
+  .doc-ov-cap-text  { font-size: clamp(0.66rem, 1.6vw, 0.84rem); line-height: 1.4; }
+  .doc-ov-source    { margin-top: 0.5em; letter-spacing: 0.15em; }
+  .doc-ov-row       { gap: clamp(8px, 1.6vw, 18px); }
 }
 
-/* Écran étroit : la paire de planches reste côte à côte (comparaison), mais
-   les marges latérales se réduisent pour lui rendre de la largeur. */
+/* Écran étroit : on rend de la largeur aux planches, qui restent côte à côte
+   (leur intérêt est la comparaison). */
 @media (max-width: 760px) {
   .doc-ov-stage {
-    padding-left:  clamp(12px, 3vw, 28px);
-    padding-right: clamp(110px, 30vw, 170px);
+    padding-left:  clamp(10px, 2.5vw, 24px);
+    padding-right: clamp(104px, 29vw, 160px);
   }
-  .doc-ov-frame img.doc-ov-media { padding: 6px; }
 }
 
-/* Mouvement réduit : on garde les apparitions, sans translation. */
+/* Mouvement réduit : on garde les apparitions, sans translation ni tracé. */
 @media (prefers-reduced-motion: reduce) {
   .doc-ov-text p,
   .doc-ov-caption { transform: none; transition-duration: 400ms; }
