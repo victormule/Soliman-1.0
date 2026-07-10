@@ -59,6 +59,12 @@ window.CONFIG = {
       appear_at:        5500,   // ms depuis enter()
       draw_duration:    2200,   // Durée animation SVG (ms)
       hide_duration:     400,
+
+      // ── POSITION VERTICALE ────────────────────────────────────────────
+      // Marge depuis le haut, en fraction de min(largeur, hauteur) du viewport.
+      // PLUS PETIT = FLÈCHE PLUS HAUTE.   0.05 = ancienne valeur
+      //   0.05 → basse   ·   0.035 → actuelle   ·   0.02 → très haute
+      margin_pct:       0.035,
     },
 
     docs: {
@@ -359,7 +365,10 @@ window.CONFIG = {
     'doc-4': {
       type: 'embed',
       url:   'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/',
-      ratio: '4 / 3',
+      // Page web de texte : on remplit toute la zone plutôt que d'imposer un
+      // ratio (à hauteur égale, un 4/3 serait 25 % plus étroit qu'un 16/9).
+      fill:  true,
+      ratio: '4 / 3',   // conservé comme repli si `fill` est retiré
       caption: 'Lettre au président de la République du collectif Abounaddara au sujet du « Syrien fanatique » — octobre 2022',
       source: { label: 'Ouvrir la lettre sur Débordements', href: 'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/' },
     },
