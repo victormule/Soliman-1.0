@@ -233,7 +233,7 @@ window.CONFIG = {
     light: {
       craneFinalFrac: 0.25,
       igniteMs:       5000,
-      igniteDelay:    2600,
+      igniteDelay:    500,
       staggerMs:      260,
       returnMs:       3000,
     },
