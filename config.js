@@ -104,7 +104,7 @@ window.CONFIG = {
         // la loupe garde ainsi une proportion cohérente sur tout écran.
         loupe_idle_frac: 0.045, // Ø du cercle indicateur hors image (frac vp)
         loupe_zoom_frac: 0.32,  // Ø de la loupe au survol d'une image (frac vp)
-        loupe_zoom:      3.0,   // force du grossissement (×)
+        loupe_zoom:      2.5,   // force du grossissement (×)
         loupe_idle_min:  30,    // garde-fous px (petit écran)
         loupe_idle_max:  60,
         loupe_zoom_min:  130,
