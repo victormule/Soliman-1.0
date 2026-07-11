@@ -590,6 +590,39 @@ window.CONFIG = {
 window.CONFIG.DOCS = window.CONFIG.PHRENOLOGIE.docs;
 window.CONFIG.NAV  = window.CONFIG.PHRENOLOGIE.navbar;
 
+
+/* ══════════════════════════════════════════════════════════════════
+   LAYOUT PARTAGÉ — une seule source de vérité pour les COLONNES LATÉRALES
+   ──────────────────────────────────────────────────────────────────
+   Boutons documents (droite), légende de l'overlay (gauche) et gouttières de
+   l'overlay doivent s'accorder. Plutôt que trois calculs indépendants (qui
+   divergeaient : le bouton pouvait dépasser sa gouttière sur grand écran), tout
+   le monde lit CES helpers.
+
+   sideColPx(vW, vH) : largeur d'UNE colonne latérale, en pixels. C'est
+   l'emprise réelle d'un bouton document = largeur du bouton + sa marge au bord.
+   La colonne de légende (gauche) et la gouttière (droite) adoptent la MÊME
+   valeur → symétrie garantie, document toujours centré, jamais de chevauchement.
+   ══════════════════════════════════════════════════════════════════ */
+
+window.CONFIG.LAYOUT = {
+  // Largeur d'un bouton document (identique à DocumentButtons.getSizePx().w).
+  docBtnWidthPx(vW) {
+    const D = window.CONFIG.DOCS;
+    const raw = vW * D.width_vw / 100;
+    return Math.round(Math.max(D.width_min, Math.min(D.width_max, raw)));
+  },
+
+  // Largeur d'une colonne latérale = bouton + marge droite (son emprise totale).
+  // Bornée pour rester raisonnable sur très grand écran.
+  sideColPx(vW) {
+    const D = window.CONFIG.DOCS;
+    const btn    = this.docBtnWidthPx(vW);
+    const margin = vW * (D.right_pct ?? 3.5) / 100;
+    return Math.round(Math.min(340, btn + margin));
+  },
+};
+
 window.CONFIG.COLLAB = {
   torch_taille:    window.CONFIG.COLLABORATION.torch.size,
   circles_delay:   window.CONFIG.COLLABORATION.circles.appear_at,
