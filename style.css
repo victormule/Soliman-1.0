@@ -1325,33 +1325,37 @@ body.peine-aim #cursor.aim-hot {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* haut · droite (colonne boutons) · bas (navbar) · gauche (colonne légende).
-     Gauche et droite sont VOLONTAIREMENT symétriques : la légende occupe à
-     gauche l'exact miroir de la colonne des boutons à droite, ce qui recentre
-     les documents. Le haut est un cran plus généreux pour les faire descendre. */
+  /* Seuls le haut (titre + flèche) et le bas (navbar) sont réservés par le
+     padding. Les colonnes latérales (légende à gauche, boutons à droite) sont
+     gérées par la GRILLE de .doc-ov-inner, qui s'étend d'un bord à l'autre. */
   padding:
-    clamp(74px, 14vh, 168px)
-    clamp(150px, 22vw, 320px)
-    clamp(58px, 12vh, 140px)
-    clamp(150px, 22vw, 320px);
+    clamp(74px, 13vh, 150px)
+    clamp(16px, 2.5vw, 40px)
+    clamp(74px, 13vh, 150px)
+    clamp(16px, 2.5vw, 40px);
 }
 
 .doc-ov-inner {
   width: 100%;
   height: 100%;
-  max-width: 1320px;
   min-height: 0;
 
-  /* Deux colonnes : [légende, largeur intrinsèque] [documents, reste].
-     Pour « À Propos » (un seul enfant) la 1ʳᵉ piste reste vide et le texte
-     s'étend sur toute la largeur via grid-column. */
+  /* Grille PLEINE LARGEUR, trois pistes :
+       1. légende — colonne gauche, largeur fixe, plaquée au bord gauche
+       2. document — prend tout l'espace restant, centré dedans
+       3. gouttière droite — même largeur que la colonne des boutons, pour que
+          le document reste centré entre les deux colonnes latérales.
+     La colonne des boutons (#doc-btns) flotte au-dessus, dans cette gouttière. */
   display: grid;
-  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  grid-template-columns:
+    clamp(150px, 21vw, 300px)
+    minmax(0, 1fr)
+    clamp(150px, 21vw, 300px);
   align-items: center;
-  column-gap: clamp(18px, 2.6vw, 46px);
+  column-gap: clamp(16px, 2vw, 36px);
 }
 
-/* « À Propos » : occupe les deux colonnes. */
+/* « À Propos » : occupe toute la largeur (les trois pistes). */
 .doc-ov-inner > .doc-ov-text { grid-column: 1 / -1; }
 
 /* ── « À Propos » ───────────────────────────────────────────────────
@@ -1410,7 +1414,7 @@ body.peine-aim #cursor.aim-hot {
    .doc-ov-row occupe TOUTE la hauteur restante (flex:1) : les cadres sont
    donc au plus grand, et la légende est repoussée tout en bas.            */
 
-/* Colonne CENTRALE : les cadres, centrés, occupant la hauteur de la zone. */
+/* Colonne CENTRALE (piste 2) : les cadres, centrés, sur toute la hauteur. */
 .doc-ov-row {
   grid-column: 2;
   height: 100%;
@@ -1513,9 +1517,8 @@ body.peine-aim #cursor.aim-hot {
    Largeur bornée pour rester lisible ; le texte se cale contre le document. */
 .doc-ov-caption {
   grid-column: 1;
-  justify-self: end;
-  width: clamp(150px, 20vw, 260px);
-  text-align: right;
+  justify-self: stretch;             /* occupe toute la colonne gauche */
+  text-align: right;                 /* texte calé à droite, contre le document */
   align-self: center;
 
   opacity: 0;
