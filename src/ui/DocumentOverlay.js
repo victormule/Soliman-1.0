@@ -225,6 +225,9 @@ export class DocumentOverlay {
     this._text     = article;
     this._textBody = body;
 
+    // Fondus haut/bas indexés sur la position de défilement.
+    article.addEventListener('scroll', () => this._updateTextFade(), { passive: true });
+
     this._sizeText();
     requestAnimationFrame(() => {
       Array.from(body.children).forEach((p, i) => {
@@ -258,7 +261,30 @@ export class DocumentOverlay {
       if (!this._text) return;
       const scrolls = this._text.scrollHeight > this._text.clientHeight + 1;
       this._text.classList.toggle('is-scroll', scrolls);
+      this._updateTextFade();
     });
+  }
+
+  /**
+   * Ajuste les zones de fondu haut/bas (--fade-top / --fade-bot) selon la
+   * position de défilement : le fondu du haut n'apparaît que s'il reste du texte
+   * au-dessus, celui du bas que s'il en reste en dessous. Le fondu évoque ainsi
+   * la présence de contenu qui continue, sans jamais masquer inutilement.
+   */
+  _updateTextFade() {
+    const el = this._text;
+    if (!el) return;
+    const FADE = 46;                       // hauteur du dégradé (px)
+    const max  = el.scrollHeight - el.clientHeight;
+    if (max <= 1) {                        // rien à défiler → aucun fondu
+      el.style.setProperty('--fade-top', '0px');
+      el.style.setProperty('--fade-bot', '0px');
+      return;
+    }
+    const top = Math.min(FADE, el.scrollTop);
+    const bot = Math.min(FADE, max - el.scrollTop);
+    el.style.setProperty('--fade-top', top.toFixed(1) + 'px');
+    el.style.setProperty('--fade-bot', bot.toFixed(1) + 'px');
   }
 
   /* ── Documents ─────────────────────────────────────────────────────────── */
