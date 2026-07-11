@@ -94,9 +94,9 @@ window.CONFIG = {
       overlay: {
         doc_max_frac_h:  0.90,  // hauteur max d'un document = fraction de la zone
         doc_max_frac_w:  1.00,  // largeur max d'un document = fraction de la zone
-        margin_v_vh:     11,    // marge haute ET basse de l'overlay (% vh)
+        margin_v_vh:     20,    // marge haute ET basse de l'overlay (% vh)
         about_max_frac:  0.94,  // largeur max du texte « À Propos » (fraction zone)
-        about_min_px:    11,    // taille de police mini du texte (px)
+        about_min_px:    10,    // taille de police mini du texte (px)
         about_max_px:    30,    // taille de police maxi du texte (px)
       },
 
@@ -116,7 +116,7 @@ window.CONFIG = {
       appear_at:        7000,   // ms depuis enter() — régler ici indépendamment
 
       // Layout
-      width:            0.80,   // Fraction largeur écran (plafond absolu)
+      width:            0.85,   // Fraction largeur écran (plafond absolu)
       cell_width:       0.26,   // Largeur idéale d'UNE cellule (fraction vW).
                                 // La barre vaut min(width·vW, N·cell_width·vW) :
                                 // en passant de 3 à 2 boutons elle se resserre au
