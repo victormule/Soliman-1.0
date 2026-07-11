@@ -95,7 +95,7 @@ window.CONFIG = {
         doc_max_frac_h:  0.90,  // hauteur max d'un document = fraction de la zone
         doc_max_frac_w:  1.00,  // largeur max d'un document = fraction de la zone
         margin_v_vh:     20,    // marge haute ET basse de l'overlay (% vh)
-        about_max_frac:  0.94,  // largeur max du texte « À Propos » (fraction zone)
+        about_max_frac:  0.90,  // largeur max du texte « À Propos » (fraction zone)
         about_min_px:    10,    // taille de police mini du texte (px)
         about_max_px:    30,    // taille de police maxi du texte (px)
       },
