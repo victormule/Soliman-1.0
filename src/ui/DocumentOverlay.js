@@ -173,9 +173,26 @@ export class DocumentOverlay {
              ?? Math.round(Math.min(300, vW * 0.19));
     this.el.style.setProperty('--doc-ov-side', col + 'px');
 
-    // Marge verticale (haut = bas) réglable en config.
+    // Marge verticale réglable en config, MAIS bornée par le bas pour ne jamais
+    // chevaucher la navbar (bottom 5% + hauteur d'un bouton ≈ taille flèche) ni,
+    // en haut, le titre + la flèche. On prend donc le MAX entre le réglage et
+    // ces planchers → aucun chevauchement possible, quelle que soit la fenêtre.
+    const vH = Math.max(this.config.MIN_SIZE.height, window.innerHeight);
     const marginVh = this.config.DOCS?.overlay?.margin_v_vh ?? 11;
-    this.el.style.setProperty('--doc-ov-margin-v', marginVh + 'vh');
+    const wanted   = vH * marginVh / 100;
+
+    // Plancher bas = emprise navbar + petite respiration.
+    const arrow = this.config.ARROW ?? {};
+    const sz = Math.max(arrow.size_min ?? 36,
+                        Math.min(arrow.size_max ?? 120,
+                                 Math.min(vW, vH) * (arrow.size_vh ?? 7) / 100));
+    const navBottom = vH * 0.05 + sz + 24;         // navbar + marge
+    const topFloor  = Math.max(64, vH * 0.11);     // titre + flèche
+
+    const marginTop = Math.round(Math.max(wanted, topFloor));
+    const marginBot = Math.round(Math.max(wanted, navBottom));
+    this.el.style.setProperty('--doc-ov-margin-top', marginTop + 'px');
+    this.el.style.setProperty('--doc-ov-margin-bot', marginBot + 'px');
 
     // Largeur max du texte « À Propos », réglable en config.
     const aboutFrac = this.config.DOCS?.overlay?.about_max_frac ?? 0.94;
