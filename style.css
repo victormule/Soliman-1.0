@@ -1527,21 +1527,24 @@ body.peine-aim #cursor.aim-hot {
   display: block;
   color: rgba(255, 255, 255, 0.80);
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(0.8rem, 1.02vw, 1.1rem);
+  /* Taille FLUIDE, indexée sur la largeur de la colonne (--doc-ov-side) : la
+     légende rapetisse quand la colonne se resserre, au lieu de déborder ou de
+     forcer un retour à la ligne disgracieux. Bornée pour rester lisible. */
+  font-size: clamp(0.66rem, calc(var(--doc-ov-side, 200px) * 0.072), 1.12rem);
   font-style: italic;
   font-weight: 300;
-  line-height: 1.55;
+  line-height: 1.5;
   text-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
 }
 
 .doc-ov-source {
   display: inline-block;
-  margin-top: 0.8em;
+  margin-top: 0.85em;
   color: rgba(210, 175, 90, 0.92);
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.56rem, 0.74vw, 0.72rem);
+  font-size: clamp(0.5rem, calc(var(--doc-ov-side, 200px) * 0.05), 0.72rem);
   font-weight: 400;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   text-decoration: none;
   border-bottom: 1px solid rgba(210, 175, 90, 0.3);
@@ -1552,42 +1555,16 @@ body.peine-aim #cursor.aim-hot {
 .doc-ov-source:hover { color: rgba(255, 230, 150, 1); border-color: rgba(255, 220, 120, 0.85); }
 
 @media (max-height: 520px) {
-  /* Fenêtre très basse : on réduit un peu les paddings de la légende. */
-  .doc-ov-cap-text  { font-size: clamp(0.66rem, 1.6vw, 0.84rem); line-height: 1.4; }
-  .doc-ov-source    { margin-top: 0.5em; letter-spacing: 0.15em; }
-  .doc-ov-row       { gap: clamp(8px, 1.6vw, 18px); }
+  .doc-ov-cap-text { line-height: 1.35; }
+  .doc-ov-row      { gap: clamp(8px, 1.6vw, 18px); }
 }
 
 /* Écran étroit : on rend de la largeur aux planches, qui restent côte à côte
    (leur intérêt est la comparaison). */
-@media (max-width: 760px) {
-  /* Écran étroit : plus de colonne de légende à gauche (trop mince pour être
-     lisible). Le document occupe la largeur entre les deux gouttières, et la
-     légende passe SOUS lui, centrée. On réduit la colonne latérale gauche à
-     zéro et on garde la droite pour les boutons. */
-  .doc-ov-row {
-    left: clamp(10px, 3vw, 24px);
-    right: var(--doc-ov-side, clamp(120px, 24vw, 200px));
-    bottom: clamp(56px, 14vh, 96px);       /* place pour la légende dessous */
-  }
-  .doc-ov-text {
-    left: clamp(10px, 3vw, 24px);
-    right: var(--doc-ov-side, clamp(120px, 24vw, 200px));
-  }
-  .doc-ov-caption {
-    top: auto;
-    bottom: 0;
-    left: clamp(10px, 3vw, 24px);
-    width: auto;
-    right: var(--doc-ov-side, clamp(120px, 24vw, 200px));
-    height: auto;
-    align-items: center;
-    text-align: center;
-    padding: 0;
-    transform: translateY(8px);
-  }
-  .doc-ov-caption.in { transform: translateY(0); }
-}
+/* Pas de bascule de structure sur écran étroit : la mise en page reste
+   IDENTIQUE à toute largeur (légende à gauche, document centré). La légende
+   rapetisse via clamp() si nécessaire. En deçà de MIN_SIZE.width (500px), le
+   viewport est de toute façon verrouillé par #app. */
 
 /* Mouvement réduit : on garde les apparitions, sans translation ni tracé. */
 @media (prefers-reduced-motion: reduce) {
