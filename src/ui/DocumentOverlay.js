@@ -120,7 +120,7 @@ export class DocumentOverlay {
   resize() {
     this._applySideColumn();
     if (!this.currentKey) return;
-    if (this._text) this._fitText();
+    if (this._text) this._sizeText();
     else            this._layoutFrames(false);
   }
 
@@ -189,11 +189,11 @@ export class DocumentOverlay {
   _buildText(data) {
     const article = document.createElement('article');
     article.className = 'doc-ov-text';
+    // Le texte est défilable : un geste de lecture (molette, glissé) ne doit
+    // pas refermer l'overlay.
     article.addEventListener('click', e => e.stopPropagation());
+    article.addEventListener('wheel', e => e.stopPropagation(), { passive: true });
 
-    // Corps mesurable : le centrage vertical vit sur `article`. Mesurer un
-    // contenu qui déborde d'un conteneur CENTRÉ fausse scrollHeight (il déborde
-    // symétriquement) — on mesure donc la hauteur propre de ce corps.
     const body = document.createElement('div');
     body.className = 'doc-ov-text-body';
 
@@ -208,10 +208,8 @@ export class DocumentOverlay {
     this._text     = article;
     this._textBody = body;
 
-    // Ajustement AVANT la cascade : taille définitive dès la première frame,
-    // aucun reflow visible pendant les fondus.
+    this._sizeText();
     requestAnimationFrame(() => {
-      this._fitText();
       Array.from(body.children).forEach((p, i) => {
         this._addTimer(() => p.classList.add('in'), 120 + i * T.paraStagger);
       });
@@ -221,54 +219,29 @@ export class DocumentOverlay {
   }
 
   /**
-   * Ajuste la taille de police pour que TOUT le texte tienne dans la zone,
-   * sans ascenseur. Recherche dichotomique sur la taille en pixels : ~12 essais
-   * suffisent au dixième de pixel près, chacun coûtant un seul reflow.
-   * Les tailles relatives (paragraphe d'accroche, interlignes, marges) sont
-   * exprimées en `em` dans le CSS : elles suivent automatiquement.
+   * Fixe une taille de police proportionnelle au viewport (bornée par la
+   * config). Le texte est CENTRÉ ; s'il dépasse la hauteur, il DÉFILE (overflow
+   * géré en CSS) — plus d'ajustement dichotomique, plus de risque de chevauchement
+   * avec l'UI. Rappelé au resize.
    */
-  _fitText() {
-    const el   = this._text;
-    const body = this._textBody;
-    if (!el || !body) return;
-
-    const avail = el.clientHeight;
-    if (avail < 20) return;
-
-    const fits = (px) => {
-      el.style.fontSize = px + 'px';
-      this._syncTextLead(px);   // l'interligne influe sur la hauteur : le lier ici
-      return body.getBoundingClientRect().height <= avail + 1;
-    };
-
-    // Bornes réglables en config (repli sur les constantes du module).
+  _sizeText() {
+    const el = this._text;
+    if (!el) return;
     const ov  = this.config.DOCS?.overlay ?? {};
     const min = ov.about_min_px ?? TEXT_MIN_PX;
     const max = ov.about_max_px ?? TEXT_MAX_PX;
+    const px  = Math.min(max, Math.max(min, Math.round(window.innerHeight * 0.026)));
+    el.style.fontSize   = px + 'px';
+    el.style.lineHeight = px < 15 ? '1.6' : '1.75';
 
-    // Borne haute : proportionnelle au viewport, jamais au-delà de `max`.
-    const hiStart = Math.min(max, Math.max(min, Math.round(window.innerHeight * 0.030)));
-
-    if (fits(hiStart)) return;
-
-    // Dichotomie : ~12 essais suffisent au dixième de pixel, un reflow chacun.
-    let lo = min, hi = hiStart;
-    for (let i = 0; i < 12 && hi - lo > 0.1; i++) {
-      const mid = (lo + hi) / 2;
-      if (fits(mid)) lo = mid; else hi = mid;
-    }
-    fits(lo);   // rétablit la dernière taille qui tenait
-  }
-
-  /**
-   * Interligne solidaire de la taille : un texte réduit doit se resserrer,
-   * sinon il « flotte » et perd sa tenue typographique.
-   */
-  _syncTextLead(px) {
-    const el = this._text;
-    if (!el) return;
-    const lead = px < 14 ? 1.58 : px < 18 ? 1.68 : 1.78;
-    el.style.lineHeight = String(lead);
+    // Débordement → mode défilement (sinon justify-content:center couperait le
+    // haut, inatteignable au scroll). Centré tant que ça tient, ancré en haut
+    // dès que ça dépasse.
+    requestAnimationFrame(() => {
+      if (!this._text) return;
+      const scrolls = this._text.scrollHeight > this._text.clientHeight + 1;
+      this._text.classList.toggle('is-scroll', scrolls);
+    });
   }
 
   /* ── Documents ─────────────────────────────────────────────────────────── */
@@ -611,7 +584,7 @@ export class DocumentOverlay {
       this._roRaf = requestAnimationFrame(() => {
         this._roRaf = null;
         if (!this.currentKey || this._drawing) return;   // pas pendant le tracé
-        if (this._text) this._fitText();
+        if (this._text) this._sizeText();
         else            this._layoutFrames(false);       // repositionne sans rejouer le tracé
       });
     });
