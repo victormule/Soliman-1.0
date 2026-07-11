@@ -116,6 +116,7 @@ export class DocumentOverlay {
 
   /** Recalcule la mise en page (appelé par la scène au resize). */
   resize() {
+    this._applySideColumn();
     if (!this.currentKey) return;
     if (this._text) this._fitText();
     else            this._layoutFrames(false);
@@ -153,6 +154,22 @@ export class DocumentOverlay {
     app.appendChild(root);
     this.el    = root;
     this.inner = root.querySelector('.doc-ov-inner');
+    this._applySideColumn();
+  }
+
+  /**
+   * Largeur des colonnes latérales (légende gauche + gouttière droite), posée
+   * en variable CSS depuis la MÊME source que les boutons documents
+   * (CONFIG.LAYOUT.sideColPx). Garantit que le document reste centré entre les
+   * deux colonnes et que la gouttière couvre exactement l'emprise des boutons,
+   * à toute largeur d'écran. Rappelé à chaque resize().
+   */
+  _applySideColumn() {
+    if (!this.el) return;
+    const vW  = Math.max(this.config.MIN_SIZE.width,  window.innerWidth);
+    const col = this.config.LAYOUT?.sideColPx?.(vW)
+             ?? Math.round(Math.min(300, vW * 0.19));
+    this.el.style.setProperty('--doc-ov-side', col + 'px');
   }
 
   _onKeyDown(e) { if (e.key === 'Escape') this.close(); }
