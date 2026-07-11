@@ -1325,24 +1325,34 @@ body.peine-aim #cursor.aim-hot {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* haut · droite (colonne de boutons) · bas (navbar) · gauche */
+  /* haut · droite (colonne boutons) · bas (navbar) · gauche (colonne légende).
+     Gauche et droite sont VOLONTAIREMENT symétriques : la légende occupe à
+     gauche l'exact miroir de la colonne des boutons à droite, ce qui recentre
+     les documents. Le haut est un cran plus généreux pour les faire descendre. */
   padding:
-    clamp(58px, 11vh, 130px)
-    clamp(146px, 23vw, 330px)
-    clamp(64px, 14vh, 160px)
-    clamp(20px, 5vw, 90px);
+    clamp(74px, 14vh, 168px)
+    clamp(150px, 22vw, 320px)
+    clamp(58px, 12vh, 140px)
+    clamp(150px, 22vw, 320px);
 }
 
 .doc-ov-inner {
   width: 100%;
   height: 100%;
-  max-width: 1240px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  max-width: 1320px;
   min-height: 0;
+
+  /* Deux colonnes : [légende, largeur intrinsèque] [documents, reste].
+     Pour « À Propos » (un seul enfant) la 1ʳᵉ piste reste vide et le texte
+     s'étend sur toute la largeur via grid-column. */
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(18px, 2.6vw, 46px);
 }
+
+/* « À Propos » : occupe les deux colonnes. */
+.doc-ov-inner > .doc-ov-text { grid-column: 1 / -1; }
 
 /* ── « À Propos » ───────────────────────────────────────────────────
    Aucun ascenseur : la taille de police est calculée par dichotomie pour que
@@ -1400,20 +1410,12 @@ body.peine-aim #cursor.aim-hot {
    .doc-ov-row occupe TOUTE la hauteur restante (flex:1) : les cadres sont
    donc au plus grand, et la légende est repoussée tout en bas.            */
 
-.doc-ov-figure {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 0;
-}
-
+/* Colonne CENTRALE : les cadres, centrés, occupant la hauteur de la zone. */
 .doc-ov-row {
-  flex: 1 1 auto;
+  grid-column: 2;
+  height: 100%;
   min-height: 0;
-  width: 100%;
+  min-width: 0;
   display: flex;
   gap: clamp(14px, 2.2vw, 38px);
   align-items: center;
@@ -1462,6 +1464,7 @@ body.peine-aim #cursor.aim-hot {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  padding: 8px;                       /* l'image ne touche pas le trait */
   -webkit-user-drag: none;
   user-select: none;
 }
@@ -1506,20 +1509,23 @@ body.peine-aim #cursor.aim-hot {
 
 /* ── Légende + source, en bas de zone ──────────────────────────────── */
 
+/* Colonne GAUCHE : légende alignée à droite, miroir de la colonne de boutons.
+   Largeur bornée pour rester lisible ; le texte se cale contre le document. */
 .doc-ov-caption {
-  flex: 0 0 auto;
-  margin-top: clamp(16px, 2.8vh, 34px);
-  max-width: 84ch;
-  text-align: center;
+  grid-column: 1;
+  justify-self: end;
+  width: clamp(150px, 20vw, 260px);
+  text-align: right;
+  align-self: center;
 
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateX(-10px);
   transition:
     opacity 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
     transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.doc-ov-caption.in { opacity: 1; transform: translateY(0); }
+.doc-ov-caption.in { opacity: 1; transform: translateX(0); }
 
 .doc-ov-cap-text {
   display: block;
@@ -1558,11 +1564,12 @@ body.peine-aim #cursor.aim-hot {
 @media (max-height: 520px) {
   .doc-ov-stage {
     padding:
-      clamp(34px, 9vh, 60px)
-      clamp(126px, 21vw, 190px)
-      clamp(38px, 11vh, 66px)
-      clamp(14px, 4vw, 36px);
+      clamp(42px, 11vh, 74px)
+      clamp(120px, 19vw, 180px)
+      clamp(34px, 9vh, 58px)
+      clamp(120px, 19vw, 180px);
   }
+  .doc-ov-caption { width: clamp(110px, 17vw, 190px); }
   .doc-ov-caption   { margin-top: 10px; }
   .doc-ov-cap-text  { font-size: clamp(0.66rem, 1.6vw, 0.84rem); line-height: 1.4; }
   .doc-ov-source    { margin-top: 0.5em; letter-spacing: 0.15em; }
@@ -1572,10 +1579,37 @@ body.peine-aim #cursor.aim-hot {
 /* Écran étroit : on rend de la largeur aux planches, qui restent côte à côte
    (leur intérêt est la comparaison). */
 @media (max-width: 760px) {
+  /* Trop étroit pour une colonne de légende à gauche : on empile
+     (documents puis légende dessous) et on ne réserve que la colonne des
+     boutons à droite. */
   .doc-ov-stage {
-    padding-left:  clamp(10px, 2.5vw, 24px);
-    padding-right: clamp(104px, 29vw, 160px);
+    padding:
+      clamp(56px, 12vh, 90px)
+      clamp(96px, 27vw, 150px)
+      clamp(46px, 10vh, 80px)
+      clamp(14px, 4vw, 28px);
   }
+  .doc-ov-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .doc-ov-row {
+    grid-column: auto;
+    width: 100%;
+    flex: 0 1 auto;
+  }
+  .doc-ov-caption {
+    grid-column: auto;
+    justify-self: auto;
+    width: 100%;
+    max-width: 60ch;
+    text-align: center;
+    margin-top: clamp(12px, 2.4vh, 22px);
+    transform: translateY(8px);
+  }
+  .doc-ov-caption.in { transform: translateY(0); }
 }
 
 /* Mouvement réduit : on garde les apparitions, sans translation ni tracé. */
