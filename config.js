@@ -64,7 +64,7 @@ window.CONFIG = {
       // Marge depuis le haut, en fraction de min(largeur, hauteur) du viewport.
       // PLUS PETIT = FLÈCHE PLUS HAUTE.   0.05 = ancienne valeur
       //   0.05 → basse   ·   0.035 → actuelle   ·   0.02 → très haute
-      margin_pct:       0.025,
+      margin_pct:       0.035,
     },
 
     docs: {
@@ -325,7 +325,7 @@ window.CONFIG = {
       paragraphs: [
         'Que faire du corps de Soliman al-Halabi, assassin présumé du général Kléber, qui demeure sans sépulture depuis sa condamnation à mort par la justice française en 1800 ?',
         'Le corps de cet écrivain public originaire d\u2019Alep a été ramené en France dans les bagages de l\u2019expédition d\u2019Égypte (1798-1801). Il a été remis au Muséum national d\u2019Histoire naturelle qui l\u2019a exposé dans ses vitrines jusque dans les années 1980.',
-        'Entre temps, le corps de Soliman al-Halabi a été érigé en représentant d\u2019une nation ou une religion.',
+        'Entretemps, le corps de Soliman al-Halabi a été érigé en représentant d\u2019une nation ou une religion.',
         'En France, il a intégré les collections publiques en tant que spécimen de « Syrien fanatique ». De l\u2019autre côté de la Méditerranée, il a été élevé au rang de relique de héros national ou martyr religieux.',
         'Que faire de ce corps à l\u2019état de squelette qui se tient au travers de la commune humanité ? Telle est la question soulevée par le présent site qui est né d\u2019une recherche collaborative réunissant des chercheurs, lycéens et étudiants français. Et cela à l\u2019initiative du collectif syrien Abounaddara, avec le soutien de l\u2019Agence Nationale de la Recherche, et France-Berkeley Fund.',
       ],
@@ -341,7 +341,7 @@ window.CONFIG = {
       caption: 'Extrait du recueil des pièces relatives à la procédure et au jugement de Soleyman El-Hhaleby, assassin du général en chef Kléber',
       source: {
         label: 'Source — Gallica (BnF)',
-        href:  'https://heritage.bnf.fr/bibliothequesorient/recueil-pieces-relatives-procedure-et-au-jugement-soleyman-el-hhaleby-assassin-general-en-chef',
+        href:  'https://gallica.bnf.fr/ark:/12148/bpt6k63439128.r=recueil%20des%20pi%C3%A8ces%20relatives%20%C3%A0%20la%20proc%C3%A9dure%20et%20au%20jugement%20de%20SOLEYMAN%20EL-HHALEBY%2C%20assassin%20du%20GENERAL%20EN%20CHEF%20KLEBER%2C?rk=21459;2',
       },
     },
 
@@ -359,18 +359,18 @@ window.CONFIG = {
       poster: 'images/doc-3-poster.jpg',   // écran tactile : image fixe
       ratio:  '16 / 9',
       caption: 'Film des frères Lumière, l\u2019assassinat de Kléber — janvier 1898',
-      source: { label: 'Ouvrir la page Catalogue Lumière', href: 'https://catalogue-lumiere.com/assassinat-de-kleber/' },
+      source: { label: 'Ouvrir le catalogue Lumière', href: 'https://catalogue-lumiere.com/assassinat-de-kleber/' },
     },
 
     'doc-4': {
       type: 'embed',
       url:   'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/',
-      // Page web de texte : on remplit toute la zone plutôt que d'imposer un
-      // ratio (à hauteur égale, un 4/3 serait 25 % plus étroit qu'un 16/9).
-      fill:  true,
-      ratio: '4 / 3',   // conservé comme repli si `fill` est retiré
+      // Les incrustations sont affichées dans un cadre de TAILLE FIXE UNIFORME
+      // (identique à doc-3), centré entre les deux colonnes : voir
+      // DocumentOverlay._layoutFrames (gabarit 16/9 commun à tous les embeds).
+      ratio: '16 / 9',
       caption: 'Lettre au président de la République du collectif Abounaddara au sujet du « Syrien fanatique » — octobre 2022',
-      source: { label: 'Ouvrir la page Débordements', href: 'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/' },
+      source: { label: 'Ouvrir la lettre sur Débordements', href: 'https://debordements.fr/Lettre-au-President-de-la-Republique-au-sujet-du-Syrien-fanatique/' },
     },
   },
 
@@ -473,8 +473,8 @@ window.CONFIG = {
    ══════════════════════════════════════════════════════════════════ */
 
   MIN_SIZE: {
-    width:  500,
-    height: 350,
+    width:  600,
+    height: 450,
   },
 
 
