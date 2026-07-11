@@ -1319,55 +1319,85 @@ body.peine-aim #cursor.aim-hot {
   background: radial-gradient(circle at 42% 50%, rgba(8, 8, 8, 0.82) 0%, rgba(0, 0, 0, 0.94) 100%);
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   STAGE — zone utile.
+   inset vertical = marges calculées en JS (--doc-ov-margin-top/-bot), qui
+   intègrent un plancher : on ne chevauche JAMAIS le titre en haut ni la navbar
+   en bas. inset horizontal = 0 : on gère les côtés au niveau des enfants.
+   La zone est un repère de POSITIONNEMENT (position:relative) : le document et
+   la légende y sont placés INDÉPENDAMMENT l'un de l'autre → aucune interférence
+   de hauteur, la légende ne peut plus "partir en haut".
+   ══════════════════════════════════════════════════════════════════ */
 .doc-ov-stage {
   position: absolute;
-  /* Marges verticales calculées en JS (--doc-ov-margin-top/-bot) : elles
-     intègrent un plancher qui garantit qu'on ne chevauche JAMAIS le titre en
-     haut ni la navbar en bas, quelle que soit la hauteur de fenêtre. */
   top:    var(--doc-ov-margin-top, clamp(74px, 13vh, 150px));
   bottom: var(--doc-ov-margin-bot, clamp(74px, 13vh, 150px));
   left:  0;
   right: 0;
-  display: grid;
 }
 
 .doc-ov-inner {
+  position: relative;
   width: 100%;
   height: 100%;
-  min-height: 0;
-
-  /* 3 pistes SYMÉTRIQUES : [side] [1fr] [side]. Gouttières égales → centre
-     mathématiquement centré. align-items: stretch → la légende et le document
-     occupent CHACUN toute la hauteur, sans interférer l'un avec l'autre
-     (fini la légende qui "part en haut" quand le doc est plus grand). */
-  display: grid;
-  grid-template-columns:
-    var(--doc-ov-side, clamp(140px, 20vw, 300px))
-    minmax(0, 1fr)
-    var(--doc-ov-side, clamp(140px, 20vw, 300px));
-  grid-template-rows: 100%;           /* UNE rangée = toute la hauteur → availH
-                                         stable, plus de saut de taille du doc */
-  align-items: stretch;
-  column-gap: 0;
 }
 
-/* « À Propos » : occupe la colonne gauche + la colonne centrale, mais PAS la
-   gouttière droite (piste 3) réservée aux boutons documents — sinon le texte
-   passe sous les boutons. Il s'arrête donc à la fin de la piste 2. */
-.doc-ov-inner > .doc-ov-text {
-  /* Colonne gauche + centre, jamais la gouttière droite (boutons). */
-  grid-column: 1 / 3;
-  justify-self: center;
-  max-width: calc(min(1100px, 100%) * var(--doc-ov-about-frac, 0.90));
+/* ── DOCUMENT — centré dans la fenêtre, décalé de la moitié de l'asymétrie ──
+   La zone centrale disponible = fenêtre − 2·(colonne latérale). Le document est
+   centré horizontalement dans CETTE zone, donc au milieu de la fenêtre (les deux
+   colonnes latérales étant égales). Centré verticalement dans le stage. */
+.doc-ov-row {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left:  var(--doc-ov-side, clamp(140px, 20vw, 300px));
+  right: var(--doc-ov-side, clamp(140px, 20vw, 300px));
+  padding: 0 clamp(8px, 1.2vw, 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 2.2vw, 38px);
+}
 
-  width: 100%;
-  height: 100%;
-  min-height: 0;
+/* ── LÉGENDE — colonne gauche, ancrée. Sa position ne dépend QUE du stage :
+   collée au bord gauche, largeur = colonne latérale, centrée verticalement,
+   texte calé à droite (contre le document). Indépendante du document. ── */
+.doc-ov-caption {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--doc-ov-side, clamp(140px, 20vw, 300px));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 clamp(16px, 1.6vw, 28px) 0 clamp(18px, 2.4vw, 40px);
+  text-align: right;
+
+  opacity: 0;
+  transform: translateX(-10px);
+  transition:
+    opacity 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.doc-ov-caption.in { opacity: 1; transform: translateX(0); }
+
+/* ── TEXTE « À PROPOS » — centré dans la zone centrale (mêmes bornes que le
+   document : entre les deux colonnes), défilable, texte aligné à gauche. ── */
+.doc-ov-text {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left:  var(--doc-ov-side, clamp(140px, 20vw, 300px));
+  right: var(--doc-ov-side, clamp(140px, 20vw, 300px));
+
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;            /* centré vertical tant que ça tient */
+  justify-content: center;
 
   color: rgba(255, 255, 255, 0.94);
   font-family: 'Cormorant Garamond', Georgia, serif;
@@ -1380,16 +1410,16 @@ body.peine-aim #cursor.aim-hot {
 .doc-ov-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 2px; }
 .doc-ov-text::-webkit-scrollbar-track { background: transparent; }
 
-/* Quand le texte déborde et défile, justify-content:center couperait le haut :
-   on repasse en flux normal dès que ça dépasse (le navigateur gère via auto). */
-.doc-ov-inner > .doc-ov-text.is-scroll { justify-content: flex-start; }
+/* Débordement → ancrer en haut (sinon justify-content:center coupe le début). */
+.doc-ov-text.is-scroll { justify-content: flex-start; }
 
-/* Corps du texte « À Propos ». */
+/* Corps : bloc centré horizontalement, texte aligné à gauche. */
 .doc-ov-text-body {
   width: 100%;
-  margin: 0 auto;                     /* bloc centré dans la colonne */
+  max-width: calc(62ch * var(--doc-ov-about-frac, 0.90));
+  margin: 0 auto;
   padding: 0.5em 0;
-  text-align: left;                   /* texte aligné à gauche (lecture) */
+  text-align: left;
 }
 
 .doc-ov-text p {
@@ -1409,7 +1439,6 @@ body.peine-aim #cursor.aim-hot {
 .doc-ov-text p.in { opacity: 1; transform: translateY(0); }
 .doc-ov-text p:last-child { margin-bottom: 0; }
 
-/* Question inaugurale : accentuée, sans casser l'ajustement (unités em). */
 .doc-ov-text p:first-child {
   color: rgba(255, 255, 255, 0.99);
   font-style: italic;
@@ -1417,24 +1446,7 @@ body.peine-aim #cursor.aim-hot {
   margin-bottom: 1.15em;
 }
 
-/* ── Documents ──────────────────────────────────────────────────────
-   .doc-ov-row occupe TOUTE la hauteur restante (flex:1) : les cadres sont
-   donc au plus grand, et la légende est repoussée tout en bas.            */
-
-/* Colonne CENTRALE (piste 2) : les cadres, centrés, sur toute la hauteur. */
-.doc-ov-row {
-  grid-column: 2;
-  min-height: 0;
-  min-width: 0;
-  height: 100%;
-  padding: 0 clamp(8px, 1.2vw, 20px);
-  display: flex;
-  align-items: center;                /* document centré verticalement */
-  justify-content: center;            /* et horizontalement */
-  gap: clamp(14px, 2.2vw, 38px);
-}
-
-/* Dimensions posées en JS (width/height en px, déduits du ratio du média). */
+/* ── Cadres ────────────────────────────────────────────────────────── */
 .doc-ov-frame {
   position: relative;
   flex: 0 0 auto;
@@ -1459,24 +1471,20 @@ body.peine-aim #cursor.aim-hot {
   fill: none;
   stroke: rgba(255, 255, 255, 0.82);
   stroke-width: 1;
-  /* Ni pathLength ni vector-effect:non-scaling-stroke : combinés, le tracé se
-     fend. Le périmètre est calculé en pixels réels par le JS. */
 }
 
 .doc-ov-media {
   opacity: 0;
   transition: opacity 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-
 .doc-ov-media.in { opacity: 1; }
 
-/* Le cadre épouse l'image : `contain` ne rogne rien et ne laisse pas de vide. */
 .doc-ov-frame img.doc-ov-media {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 8px;                       /* l'image ne touche pas le trait */
+  padding: 8px;
   -webkit-user-drag: none;
   user-select: none;
 }
@@ -1489,7 +1497,6 @@ body.peine-aim #cursor.aim-hot {
   background: #0b0b0b;
 }
 
-/* Repli : image absente, site non incrustable, ou écran tactile. */
 .doc-ov-missing {
   display: flex;
   align-items: center;
@@ -1513,36 +1520,9 @@ body.peine-aim #cursor.aim-hot {
   padding-bottom: 2px;
   transition: color 0.3s ease, border-color 0.3s ease;
 }
+.doc-ov-missing a:hover { color: rgba(255, 235, 175, 1); border-color: rgba(255, 220, 120, 0.9); }
 
-.doc-ov-missing a:hover {
-  color: rgba(255, 235, 175, 1);
-  border-color: rgba(255, 220, 120, 0.9);
-}
-
-/* ── Légende + source, en bas de zone ──────────────────────────────── */
-
-/* Colonne GAUCHE : légende alignée à droite, miroir de la colonne de boutons.
-   Largeur bornée pour rester lisible ; le texte se cale contre le document. */
-.doc-ov-caption {
-  grid-column: 1;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;            /* légende centrée verticalement */
-  align-items: flex-end;              /* calée à droite, contre le document */
-  padding: 0 clamp(18px, 1.8vw, 32px) 0 clamp(20px, 3vw, 48px);
-  text-align: right;
-
-  opacity: 0;
-  transform: translateX(-10px);
-  transition:
-    opacity 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.doc-ov-caption.in { opacity: 1; transform: translateX(0); }
-
+/* ── Légende : texte + source ──────────────────────────────────────── */
 .doc-ov-cap-text {
   display: block;
   color: rgba(255, 255, 255, 0.80);
@@ -1569,24 +1549,10 @@ body.peine-aim #cursor.aim-hot {
   pointer-events: auto;
   transition: color 0.35s ease, border-color 0.35s ease;
 }
-
-.doc-ov-source:hover {
-  color: rgba(255, 230, 150, 1);
-  border-color: rgba(255, 220, 120, 0.85);
-}
-
-/* ── Téléphone en paysage : la hauteur est la ressource rare ────────── */
+.doc-ov-source:hover { color: rgba(255, 230, 150, 1); border-color: rgba(255, 220, 120, 0.85); }
 
 @media (max-height: 520px) {
-  .doc-ov-stage {
-    padding:
-      clamp(42px, 11vh, 74px)
-      clamp(120px, 19vw, 180px)
-      clamp(34px, 9vh, 58px)
-      clamp(120px, 19vw, 180px);
-  }
-  /* La légende suit --doc-ov-side comme partout : pas d'override de largeur. */
-  .doc-ov-caption   { margin-top: 10px; }
+  /* Fenêtre très basse : on réduit un peu les paddings de la légende. */
   .doc-ov-cap-text  { font-size: clamp(0.66rem, 1.6vw, 0.84rem); line-height: 1.4; }
   .doc-ov-source    { margin-top: 0.5em; letter-spacing: 0.15em; }
   .doc-ov-row       { gap: clamp(8px, 1.6vw, 18px); }
@@ -1595,34 +1561,29 @@ body.peine-aim #cursor.aim-hot {
 /* Écran étroit : on rend de la largeur aux planches, qui restent côte à côte
    (leur intérêt est la comparaison). */
 @media (max-width: 760px) {
-  /* Trop étroit pour une colonne de légende à gauche : on empile
-     (documents puis légende dessous) et on ne réserve que la colonne des
-     boutons à droite. */
-  .doc-ov-stage {
-    padding:
-      clamp(56px, 12vh, 90px)
-      clamp(96px, 27vw, 150px)
-      clamp(46px, 10vh, 80px)
-      clamp(14px, 4vw, 28px);
-  }
-  .doc-ov-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
+  /* Écran étroit : plus de colonne de légende à gauche (trop mince pour être
+     lisible). Le document occupe la largeur entre les deux gouttières, et la
+     légende passe SOUS lui, centrée. On réduit la colonne latérale gauche à
+     zéro et on garde la droite pour les boutons. */
   .doc-ov-row {
-    grid-column: auto;
-    width: 100%;
-    flex: 0 1 auto;
+    left: clamp(10px, 3vw, 24px);
+    right: var(--doc-ov-side, clamp(120px, 24vw, 200px));
+    bottom: clamp(56px, 14vh, 96px);       /* place pour la légende dessous */
+  }
+  .doc-ov-text {
+    left: clamp(10px, 3vw, 24px);
+    right: var(--doc-ov-side, clamp(120px, 24vw, 200px));
   }
   .doc-ov-caption {
-    grid-column: auto;
-    justify-self: auto;
-    width: 100%;
-    max-width: 60ch;
+    top: auto;
+    bottom: 0;
+    left: clamp(10px, 3vw, 24px);
+    width: auto;
+    right: var(--doc-ov-side, clamp(120px, 24vw, 200px));
+    height: auto;
+    align-items: center;
     text-align: center;
-    margin-top: clamp(12px, 2.4vh, 22px);
+    padding: 0;
     transform: translateY(8px);
   }
   .doc-ov-caption.in { transform: translateY(0); }
