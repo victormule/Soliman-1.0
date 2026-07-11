@@ -61,6 +61,7 @@ export class DocumentOverlay {
     this._row      = null;
     this._text     = null;
     this._textBody = null;  // corps mesurable du texte « À Propos »
+    this._caption  = null;  // légende (colonne gauche)
     this._ro       = null;  // ResizeObserver
     this._roRaf    = null;
 
@@ -85,6 +86,7 @@ export class DocumentOverlay {
     this._row      = null;
     this._text     = null;
     this._textBody = null;
+    this._caption  = null;
 
     if (data.type === 'text') this._buildText(data);
     else                      this._buildDocument(data);
@@ -107,7 +109,7 @@ export class DocumentOverlay {
       if (!this.currentKey && this.inner) {
         this.inner.innerHTML = '';
         this._frames = [];
-        this._row = this._text = this._textBody = null;
+        this._row = this._text = this._textBody = this._caption = null;
       }
     }, T.fadeOut + 60);
   }
@@ -125,7 +127,7 @@ export class DocumentOverlay {
     document.removeEventListener('keydown', this._onKeyDown);
     this.currentKey = null;
     this._frames = [];
-    this._row = this._text = this._textBody = null;
+    this._row = this._text = this._textBody = this._caption = null;
     this.el?.remove();
     this.el = this.inner = null;
   }
@@ -240,23 +242,13 @@ export class DocumentOverlay {
   /* ── Documents ─────────────────────────────────────────────────────────── */
 
   _buildDocument(data) {
-    const figure = document.createElement('figure');
-    figure.className = 'doc-ov-figure';
-
     const isEmbed = data.type === 'embed';
-    const row = document.createElement('div');
-    row.className = 'doc-ov-row' + (isEmbed ? ' is-embed' : '');
-    figure.appendChild(row);
-    this._row = row;
 
-    if (isEmbed) row.appendChild(this._makeEmbedFrame(data));
-    else         data.frames.forEach(f => row.appendChild(this._makeImageFrame(f)));
-
-    // Légende + source, poussées EN BAS de la zone : les cadres récupèrent
-    // toute la hauteur restante et s'affichent donc au plus grand.
-    const cap = document.createElement('figcaption');
-    cap.className = 'doc-ov-caption';
-    cap.innerHTML = `<span class="doc-ov-cap-text">${data.caption}</span>`;
+    // ── Colonne gauche : légende alignée à droite (miroir de la colonne des
+    //    boutons à droite). Le document est ainsi recentré entre les deux. ──
+    const caption = document.createElement('figcaption');
+    caption.className = 'doc-ov-caption';
+    caption.innerHTML = `<span class="doc-ov-cap-text">${data.caption}</span>`;
 
     if (data.source?.href) {
       const a = document.createElement('a');
@@ -267,49 +259,89 @@ export class DocumentOverlay {
       a.textContent = data.source.label ?? 'Source';
       a.dataset.clickable = 'true';           // curseur « hotspot » (cursor.js)
       a.addEventListener('click', e => e.stopPropagation());
-      cap.appendChild(a);
+      caption.appendChild(a);
     }
+    this._caption = caption;
 
-    figure.appendChild(cap);
-    this.inner.appendChild(figure);
+    // ── Colonne centrale : les cadres ──
+    const row = document.createElement('div');
+    row.className = 'doc-ov-row' + (isEmbed ? ' is-embed' : '');
+    this._row = row;
 
-    this._addTimer(() => cap.classList.add('in'), T.frameDraw * 0.75 + 200);
+    if (isEmbed) row.appendChild(this._makeEmbedFrame(data));
+    else         data.frames.forEach(f => row.appendChild(this._makeImageFrame(f)));
+
+    // Grille : [légende gauche] [documents centre]. La colonne droite (boutons)
+    // est matérialisée par le padding du stage ; on l'équilibre à gauche par la
+    // légende, de même gabarit.
+    this.inner.appendChild(caption);
+    this.inner.appendChild(row);
+
     this._observe(row);
   }
 
-  /** Cadre d'image : le ratio est lu sur l'image une fois décodée. */
+  /**
+   * Révèle un document une fois ses cadres dimensionnés : trace les rectangles,
+   * puis fait apparaître médias et légende. Centralisé ici pour être rejoué à
+   * l'IDENTIQUE à chaque (ré)ouverture — l'animation ne doit jamais être sautée,
+   * y compris quand l'image est servie depuis le cache (voir _makeImageFrame).
+   * @param {boolean} animate  true = tracé animé
+   */
+  _revealDocument(animate) {
+    if (!this._frames.every(f => f.ratio)) return;
+    this._layoutFrames(animate);
+
+    const medias = this._row?.querySelectorAll('.doc-ov-media') ?? [];
+    const revealDelay = animate ? T.frameDraw * 0.7 : 0;
+    this._addTimer(() => medias.forEach(m => m.classList.add('in')), revealDelay);
+    this._addTimer(() => this._caption?.classList.add('in'), revealDelay + 120);
+  }
+
+  /** Cadre d'image : le ratio est lu sur l'image, puis le document est révélé. */
   _makeImageFrame(frame) {
     const el = this._makeFrameShell();
+    // Le clic sur le cadre (donc sur l'image) NE ferme PAS : seul un clic
+    // en dehors des documents referme.
+    el.addEventListener('click', e => e.stopPropagation());
 
     const img = document.createElement('img');
     img.className = 'doc-ov-media';
-    img.src       = frame.src;
     img.alt       = frame.alt ?? '';
     img.draggable = false;
     img.decoding  = 'async';
 
     const entry = this._frames[this._frames.length - 1];
 
-    img.addEventListener('load', () => {
+    const onReady = () => {
       if (img.naturalWidth && img.naturalHeight) {
         entry.ratio = img.naturalWidth / img.naturalHeight;
       }
-      // Toutes les images connues ? On pose la mise en page et on trace.
-      if (this._frames.every(f => f.ratio)) {
-        this._layoutFrames(true);
-        this._addTimer(() => {
-          el.parentElement?.querySelectorAll('.doc-ov-media')
-            .forEach(m => m.classList.add('in'));
-        }, T.frameDraw * 0.7);
-      }
-    }, { once: true });
+      entry.ratio = entry.ratio || 0.72;
+      // Révèle dès que TOUS les cadres connaissent leur ratio → animation jouée
+      // en une fois, cadres alignés.
+      this._revealDocument(true);
+    };
 
-    img.addEventListener('error', () => {
+    const onError = () => {
       img.remove();
       entry.ratio = entry.ratio || 0.72;      // portrait par défaut
       el.appendChild(this._makeMissing('Image indisponible'));
-      if (this._frames.every(f => f.ratio)) this._layoutFrames(true);
-    }, { once: true });
+      this._revealDocument(true);
+    };
+
+    img.addEventListener('error', onError, { once: true });
+
+    // ⚠️ CACHE : une image déjà en cache ne redéclenche PAS 'load'. Sans ce
+    // test, la 2ᵉ ouverture d'un document (ou le passage d'un bouton à l'autre)
+    // n'animait plus rien. On force donc la lecture immédiate si l'image est
+    // déjà complète, sinon on attend 'load'.
+    img.addEventListener('load', onReady, { once: true });
+    img.src = frame.src;
+    if (img.complete && img.naturalWidth) {
+      // Déjà en cache : déclenche la révélation au prochain tick (le cadre doit
+      // d'abord être dans le DOM pour être mesurable).
+      requestAnimationFrame(() => onReady());
+    }
 
     el.appendChild(img);
     return el;
@@ -324,12 +356,13 @@ export class DocumentOverlay {
   _makeEmbedFrame(data) {
     const el = this._makeFrameShell();
     const entry = this._frames[this._frames.length - 1];
-    entry.ratio = this._parseRatio(data.ratio) ?? (16 / 9);
 
-    // `fill: true` → le cadre occupe TOUTE la zone disponible au lieu de suivre
-    // un ratio. À hauteur commune, un cadre 4/3 est 25 % plus étroit qu'un 16/9 :
-    // pour une page web incrustée (texte long), on veut la largeur maximale.
-    entry.fill = !!data.fill;
+    // Les incrustations (doc-3, doc-4) partagent une TAILLE FIXE UNIFORME,
+    // centrée entre les deux colonnes : on ne suit aucun ratio propre au
+    // document, `_layoutFrames` reconnaît ce drapeau et donne au cadre la même
+    // boîte pour tous les embeds. Le ratio n'est plus qu'un repli théorique.
+    entry.embed = true;
+    entry.ratio = this._parseRatio(data.ratio) ?? (16 / 9);
 
     const coarse = window.matchMedia?.('(pointer: coarse)').matches;
 
@@ -337,24 +370,23 @@ export class DocumentOverlay {
       if (data.poster) {
         const img = document.createElement('img');
         img.className = 'doc-ov-media';
-        img.src = data.poster;
         img.alt = data.caption ?? '';
         img.draggable = false;
-        img.addEventListener('load', () => {
-          if (img.naturalWidth) entry.ratio = img.naturalWidth / img.naturalHeight;
-          this._layoutFrames(true);
-          this._addTimer(() => img.classList.add('in'), T.frameDraw * 0.7);
-        }, { once: true });
+        const done = () => this._revealDocument(true);
+        img.addEventListener('load', done, { once: true });
         img.addEventListener('error', () => {
           img.remove();
           el.appendChild(this._makeEmbedFallback(data));
-          this._layoutFrames(true);
+          this._revealDocument(true);
         }, { once: true });
+        img.src = data.poster;
+        if (img.complete && img.naturalWidth) requestAnimationFrame(done);
         el.appendChild(img);
       } else {
         el.appendChild(this._makeEmbedFallback(data));
-        requestAnimationFrame(() => this._layoutFrames(true));
+        requestAnimationFrame(() => this._revealDocument(true));
       }
+      el.addEventListener('click', e => e.stopPropagation());
       return el;
     }
 
@@ -366,16 +398,15 @@ export class DocumentOverlay {
     iframe.setAttribute('allow', 'fullscreen; autoplay');
     iframe.setAttribute('title', data.caption ?? 'Document');
 
-    // L'incrustation garde ses propres interactions : molette pour défiler
-    // dans la page, clics internes. On empêche donc la fermeture depuis elle.
+    // L'incrustation garde ses propres interactions (molette pour défiler,
+    // clics internes) ET un clic dessus ne referme pas l'overlay.
     el.addEventListener('click', e => e.stopPropagation());
     el.addEventListener('wheel', e => e.stopPropagation(), { passive: true });
 
     el.appendChild(iframe);
-    requestAnimationFrame(() => {
-      this._layoutFrames(true);
-      this._addTimer(() => iframe.classList.add('in'), T.frameDraw * 0.7);
-    });
+    // Le cadre a des dimensions dès le layout (indépendant du chargement du
+    // site distant) : on révèle tout de suite, l'iframe se peint ensuite.
+    requestAnimationFrame(() => this._revealDocument(true));
     return el;
   }
 
@@ -417,7 +448,7 @@ export class DocumentOverlay {
       <svg class="doc-ov-frame-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <rect class="doc-ov-rect" x="0.5" y="0.5"/>
       </svg>`;
-    this._frames.push({ el, ratio: null, fill: false });
+    this._frames.push({ el, ratio: null, embed: false });
     return el;
   }
 
@@ -436,10 +467,16 @@ export class DocumentOverlay {
     const availH = row.clientHeight;
     if (availW < 8 || availH < 8) return;
 
-    // Cadre « pleine zone » (incrustation d'une page web) : pas de ratio imposé.
-    if (this._frames.length === 1 && this._frames[0].fill) {
+    // ── Incrustation : TAILLE FIXE UNIFORME, centrée. Tous les embeds (doc-3,
+    //    doc-4) reçoivent exactement la même boîte, indépendamment du contenu :
+    //    la plus grande boîte 16/9 qui tient dans la zone. Deux embeds ouverts
+    //    l'un après l'autre ont donc rigoureusement les mêmes dimensions. ──
+    if (this._frames.length === 1 && this._frames[0].embed) {
       const f = this._frames[0];
-      const w = Math.round(availW), h = Math.round(availH);
+      const R = 16 / 9;                         // gabarit commun à tous les embeds
+      let w = availW, h = w / R;
+      if (h > availH) { h = availH; w = h * R; }
+      w = Math.round(w); h = Math.round(h);
       f.el.style.width  = w + 'px';
       f.el.style.height = h + 'px';
       this._drawRect(f.el, w, h, animate, 0);
