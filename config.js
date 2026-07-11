@@ -88,6 +88,18 @@ window.CONFIG = {
       draw_duration:     850,   // Dessin SVG de chaque bouton (ms)
       hide_duration:     600,
 
+      // ── Réglage de l'AFFICHAGE des documents (overlay) ─────────────────
+      // Ces valeurs pilotent la place occupée par les documents et le texte
+      // « À Propos » dans l'overlay. Faciles à ajuster sans toucher au CSS.
+      overlay: {
+        doc_max_frac_h:  0.90,  // hauteur max d'un document = fraction de la zone
+        doc_max_frac_w:  1.00,  // largeur max d'un document = fraction de la zone
+        margin_v_vh:     11,    // marge haute ET basse de l'overlay (% vh)
+        about_max_frac:  0.94,  // largeur max du texte « À Propos » (fraction zone)
+        about_min_px:    11,    // taille de police mini du texte (px)
+        about_max_px:    30,    // taille de police maxi du texte (px)
+      },
+
       // ── Bouton « À Propos » ────────────────────────────────────────────
       // Placé AU-DESSUS de la colonne des documents, même gabarit et même
       // animation de tracé SVG, séparé par un espacement plus généreux.
