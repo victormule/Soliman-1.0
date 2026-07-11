@@ -1399,28 +1399,66 @@ body.peine-aim #cursor.aim-hot {
   flex-direction: column;
   justify-content: center;
 
+  /* Barre de défilement à GAUCHE : on inverse le sens d'écriture du conteneur
+     (la barre se place alors du côté "début" = gauche). Le contenu est remis
+     en ltr juste en dessous. */
+  direction: rtl;
+
   color: rgba(255, 255, 255, 0.94);
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   letter-spacing: 0.012em;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.22) transparent;
+
+  /* Fondu haut/bas : le texte s'estompe vers les bords quand il y a de la
+     matière à faire défiler au-dessus / en dessous. Les zones de fondu
+     (--fade-top / --fade-bot, en px) sont pilotées par le JS selon la position
+     de défilement → l'indice n'apparaît que s'il reste du texte de ce côté. */
+  --fade-top: 0px;
+  --fade-bot: 0px;
+  -webkit-mask: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--fade-top),
+      #000 calc(100% - var(--fade-bot)),
+      transparent 100%);
+          mask: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--fade-top),
+      #000 calc(100% - var(--fade-bot)),
+      transparent 100%);
 }
-.doc-ov-text::-webkit-scrollbar       { width: 4px; }
-.doc-ov-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 2px; }
-.doc-ov-text::-webkit-scrollbar-track { background: transparent; }
+
+/* Contenu remis dans le sens normal (le rtl ne sert qu'à placer la barre). */
+.doc-ov-text-body {
+  direction: ltr;
+  width: 100%;
+  max-width: calc(74ch * var(--doc-ov-about-frac, 1));
+  margin: 0 auto;
+  padding: 0.5em 0;
+  text-align: left;
+}
+/* Barre de défilement — accord DA : filet doré patiné, très fin, contre le
+   texte (à gauche via direction:rtl du conteneur). */
+.doc-ov-text {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(210, 175, 90, 0.55) transparent;
+}
+.doc-ov-text::-webkit-scrollbar        { width: 5px; }
+.doc-ov-text::-webkit-scrollbar-track  { background: transparent; }
+.doc-ov-text::-webkit-scrollbar-thumb  {
+  background: linear-gradient(rgba(210,175,90,0.65), rgba(203,167,90,0.35));
+  border-radius: 3px;
+}
+.doc-ov-text::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(rgba(231,206,142,0.85), rgba(210,175,90,0.55));
+}
 
 /* Débordement → ancrer en haut (sinon justify-content:center coupe le début). */
 .doc-ov-text.is-scroll { justify-content: flex-start; }
 
 /* Corps : bloc centré horizontalement, texte aligné à gauche. */
-.doc-ov-text-body {
-  width: 100%;
-  max-width: calc(62ch * var(--doc-ov-about-frac, 0.90));
-  margin: 0 auto;
-  padding: 0.5em 0;
-  text-align: left;
-}
+
 
 .doc-ov-text p {
   margin: 0 0 0.95em;
