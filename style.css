@@ -1370,10 +1370,12 @@ body.peine-aim #cursor.aim-hot {
   width: var(--doc-ov-side, clamp(140px, 20vw, 300px));
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* Le BAS de la légende s'aligne sur le BAS du document : on pousse le contenu
+     vers le bas, avec un retrait égal à --doc-ov-cap-bottom (posé en JS =
+     distance entre le bas de la zone et le bas du rectangle du document). */
+  justify-content: flex-end;
   align-items: flex-end;
-  /* Espace à droite pour la barre verticale (padding-right accru). */
-  padding: 0 clamp(24px, 2.2vw, 40px) 0 clamp(18px, 2.4vw, 40px);
+  padding: 0 clamp(24px, 2.2vw, 40px) var(--doc-ov-cap-bottom, 0px) clamp(18px, 2.4vw, 40px);
   text-align: right;
 }
 
@@ -1385,16 +1387,18 @@ body.peine-aim #cursor.aim-hot {
   content: '';
   position: absolute;
   right: clamp(11px, 1vw, 18px);
-  top: 50%;
+  /* Alignée sur le texte : même retrait bas que la légende, hauteur = celle du
+     bloc de texte (le contenu est calé en bas). */
+  bottom: var(--doc-ov-cap-bottom, 0px);
+  height: min(58%, 11em);
   width: 1px;
-  height: min(58%, 12em);
   background: linear-gradient(
       to bottom,
       rgba(210, 175, 90, 0) 0%,
-      rgba(210, 175, 90, 0.75) 22%,
-      rgba(210, 175, 90, 0.75) 78%,
+      rgba(210, 175, 90, 0.75) 20%,
+      rgba(210, 175, 90, 0.75) 80%,
       rgba(210, 175, 90, 0) 100%);
-  transform: translateY(-50%) scaleY(0);
+  transform: scaleY(0);
   transform-origin: center;
   opacity: 0;
   transition:
@@ -1415,7 +1419,7 @@ body.peine-aim #cursor.aim-hot {
 /* ── Séquence d'apparition, déclenchée par .in (posé par le JS) ──────────── */
 .doc-ov-caption.in::after {
   opacity: 1;
-  transform: translateY(-50%) scaleY(1);       /* le filet se dessine d'abord */
+  transform: scaleY(1);                        /* le filet se dessine d'abord */
 }
 .doc-ov-caption.in .doc-ov-cap-text {
   opacity: 1;
@@ -1709,4 +1713,35 @@ body.peine-aim #cursor.aim-hot {
 }
 @media (prefers-reduced-motion: reduce) {
   .doc-ov-loupe { transition: opacity 200ms ease; }
+}
+
+
+/* ── Flou aux extrémités du texte « À Propos » ──────────────────────────────
+   Deux bandes fixes par-dessus le texte défilant : le flou (backdrop-filter)
+   renforce l'indice de défilement, en plus du fondu au noir. Leur présence est
+   pilotée par --fade-top/--fade-bot (0 quand il n'y a rien à défiler de ce
+   côté). N'apparaissent que sur le texte défilable (.is-scroll). */
+.doc-ov-text-blur {
+  position: absolute;
+  left:  var(--doc-ov-side, clamp(140px, 20vw, 300px));
+  right: var(--doc-ov-side, clamp(140px, 20vw, 300px));
+  height: 74px;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.doc-ov-text-blur.top {
+  top: 0;
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  -webkit-mask: linear-gradient(to bottom, #000 0%, #000 35%, transparent 100%);
+          mask: linear-gradient(to bottom, #000 0%, #000 35%, transparent 100%);
+}
+.doc-ov-text-blur.bot {
+  bottom: 0;
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  -webkit-mask: linear-gradient(to top, #000 0%, #000 35%, transparent 100%);
+          mask: linear-gradient(to top, #000 0%, #000 35%, transparent 100%);
 }
