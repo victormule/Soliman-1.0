@@ -92,7 +92,7 @@ window.CONFIG = {
       // Ces valeurs pilotent la place occupée par les documents et le texte
       // « À Propos » dans l'overlay. Faciles à ajuster sans toucher au CSS.
       overlay: {
-        doc_max_frac_h:  0.90,  // hauteur max d'un document = fraction de la zone
+        doc_max_frac_h:  0.95,  // hauteur max d'un document = fraction de la zone
         doc_max_frac_w:  1.00,  // largeur max d'un document = fraction de la zone
         margin_v_vh:     20,    // marge haute ET basse de l'overlay (% vh)
         about_max_frac:  1.00,  // largeur max du texte « À Propos » (fraction zone)
@@ -103,7 +103,7 @@ window.CONFIG = {
         // Tailles exprimées en fraction de min(largeur, hauteur) du viewport :
         // la loupe garde ainsi une proportion cohérente sur tout écran.
         loupe_idle_frac: 0.045, // Ø du cercle indicateur hors image (frac vp)
-        loupe_zoom_frac: 0.22,  // Ø de la loupe au survol d'une image (frac vp)
+        loupe_zoom_frac: 0.32,  // Ø de la loupe au survol d'une image (frac vp)
         loupe_zoom:      3.0,   // force du grossissement (×)
         loupe_idle_min:  30,    // garde-fous px (petit écran)
         loupe_idle_max:  60,
