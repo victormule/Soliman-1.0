@@ -17,12 +17,16 @@
  * on le désactive à la fermeture. Aucun état partagé.
  */
 
-const ZOOM        = 3;      // grossissement dans la loupe (fort, « détail marqué »)
-const IDLE_SIZE   = 42;     // Ø du cercle indicateur hors image (px)
-const ZOOM_SIZE   = 190;    // Ø de la loupe au survol d'une image (px)
+/* Repli si la config n'est pas fournie. */
+const DEFAULTS = {
+  idle_frac: 0.045, zoom_frac: 0.22, zoom: 3.0,
+  idle_min: 30, idle_max: 60, zoom_min: 130, zoom_max: 260,
+};
 
 export class DocumentLoupe {
-  constructor() {
+  /** @param {Object} [config]  window.CONFIG (pour DOCS.overlay.loupe_*). */
+  constructor(config = null) {
+    this._config   = config;
     this._el       = null;
     this._targets  = [];     // { frame, img }
     this._active   = false;
@@ -78,6 +82,20 @@ export class DocumentLoupe {
     });
   }
 
+  /** Dimensions courantes (proportionnelles au viewport, bornées). */
+  _dims() {
+    const ov = this._config?.DOCS?.overlay ?? {};
+    const vp = Math.min(window.innerWidth, window.innerHeight);
+    const idleFrac = ov.loupe_idle_frac ?? DEFAULTS.idle_frac;
+    const zoomFrac = ov.loupe_zoom_frac ?? DEFAULTS.zoom_frac;
+    const idle = Math.round(Math.max(ov.loupe_idle_min ?? DEFAULTS.idle_min,
+                    Math.min(ov.loupe_idle_max ?? DEFAULTS.idle_max, vp * idleFrac)));
+    const zoom = Math.round(Math.max(ov.loupe_zoom_min ?? DEFAULTS.zoom_min,
+                    Math.min(ov.loupe_zoom_max ?? DEFAULTS.zoom_max, vp * zoomFrac)));
+    const mag  = ov.loupe_zoom ?? DEFAULTS.zoom;
+    return { idle, zoom, mag };
+  }
+
   _render({ x, y }) {
     const el = this._el;
     if (!el) return;
@@ -99,9 +117,10 @@ export class DocumentLoupe {
   /** Hors image : simple cercle indicateur, sans zoom. */
   _setIdle() {
     const el = this._el;
+    const { idle } = this._dims();
     el.classList.remove('is-zoom');
-    el.style.width  = IDLE_SIZE + 'px';
-    el.style.height = IDLE_SIZE + 'px';
+    el.style.width  = idle + 'px';
+    el.style.height = idle + 'px';
     el.style.backgroundImage = 'none';
     el.style.opacity = '1';
   }
@@ -111,6 +130,7 @@ export class DocumentLoupe {
     const el  = this._el;
     const img = hit.img;
     const r   = hit.frame.getBoundingClientRect();
+    const { zoom: ZOOM_SIZE, mag } = this._dims();
 
     // L'image est en object-fit: contain + padding : on calcule la boîte réelle
     // qu'elle occupe dans le cadre pour un recadrage fidèle.
@@ -128,9 +148,9 @@ export class DocumentLoupe {
     el.style.height = ZOOM_SIZE + 'px';
     el.style.opacity = '1';
 
-    // Fond = l'image, agrandie ZOOM×, recadrée pour centrer le point survolé.
-    const bgW = box.width  * ZOOM;
-    const bgH = box.height * ZOOM;
+    // Fond = l'image, agrandie (mag×), recadrée pour centrer le point survolé.
+    const bgW = box.width  * mag;
+    const bgH = box.height * mag;
     el.style.backgroundImage = `url("${img.currentSrc || img.src}")`;
     el.style.backgroundSize  = `${bgW}px ${bgH}px`;
     // Le point (fx,fy) de l'image doit tomber au CENTRE de la loupe.
