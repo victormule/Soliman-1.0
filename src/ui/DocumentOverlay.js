@@ -56,7 +56,7 @@ export class DocumentOverlay {
     this.currentKey = null;
 
     /** Loupe (documents images uniquement). */
-    this._loupe = new DocumentLoupe();
+    this._loupe = new DocumentLoupe(config);
 
     this.el    = null;   // racine
     this.inner = null;   // zone de contenu
@@ -120,6 +120,7 @@ export class DocumentOverlay {
         this.inner.innerHTML = '';
         this._frames = [];
         this._row = this._text = this._textBody = this._caption = null;
+        this._blurTop = this._blurBot = null;
       }
     }, T.fadeOut + 60);
   }
@@ -140,6 +141,7 @@ export class DocumentOverlay {
     this.currentKey = null;
     this._frames = [];
     this._row = this._text = this._textBody = this._caption = null;
+    this._blurTop = this._blurBot = null;
     this.el?.remove();
     this.el = this.inner = null;
   }
@@ -234,6 +236,16 @@ export class DocumentOverlay {
     this._text     = article;
     this._textBody = body;
 
+    // Bandes de flou haut/bas (indice de défilement, en plus du fondu au noir).
+    const blurTop = document.createElement('div');
+    blurTop.className = 'doc-ov-text-blur top';
+    const blurBot = document.createElement('div');
+    blurBot.className = 'doc-ov-text-blur bot';
+    this.inner.appendChild(blurTop);
+    this.inner.appendChild(blurBot);
+    this._blurTop = blurTop;
+    this._blurBot = blurBot;
+
     // Fondus haut/bas indexés sur la position de défilement.
     article.addEventListener('scroll', () => this._updateTextFade(), { passive: true });
 
@@ -283,17 +295,23 @@ export class DocumentOverlay {
   _updateTextFade() {
     const el = this._text;
     if (!el) return;
-    const FADE = 46;                       // hauteur du dégradé (px)
+    const FADE = 68;                       // hauteur du dégradé (px) — fondu accentué
     const max  = el.scrollHeight - el.clientHeight;
     if (max <= 1) {                        // rien à défiler → aucun fondu
       el.style.setProperty('--fade-top', '0px');
       el.style.setProperty('--fade-bot', '0px');
+      if (this._blurTop) this._blurTop.style.opacity = '0';
+      if (this._blurBot) this._blurBot.style.opacity = '0';
       return;
     }
     const top = Math.min(FADE, el.scrollTop);
     const bot = Math.min(FADE, max - el.scrollTop);
     el.style.setProperty('--fade-top', top.toFixed(1) + 'px');
     el.style.setProperty('--fade-bot', bot.toFixed(1) + 'px');
+
+    // Les bandes de flou suivent le fondu : opacité proportionnelle (0 → 1).
+    if (this._blurTop) this._blurTop.style.opacity = (top / FADE).toFixed(2);
+    if (this._blurBot) this._blurBot.style.opacity = (bot / FADE).toFixed(2);
   }
 
   /* ── Documents ─────────────────────────────────────────────────────────── */
@@ -563,6 +581,7 @@ export class DocumentOverlay {
       f.el.style.width  = w + 'px';
       f.el.style.height = h + 'px';
       this._drawRect(f.el, w, h, animate, 0);
+      this._syncCaptionBottom(row.clientHeight, h);
       return;
     }
 
@@ -580,6 +599,21 @@ export class DocumentOverlay {
       f.el.style.height = h + 'px';
       this._drawRect(f.el, w, h, animate, i * 160);
     });
+    this._syncCaptionBottom(row.clientHeight, Math.round(H));
+  }
+
+  /**
+   * Aligne le BAS de la légende sur le BAS du rectangle du document. Le document
+   * est centré verticalement dans la row (pleine hauteur de la zone), donc son
+   * bas se situe à (hauteurZone + hauteurDoc) / 2 depuis le haut. On pose cet
+   * écart depuis le bas (--doc-ov-cap-bottom) et la légende s'y cale.
+   * @param {number} zoneH  hauteur de la zone (row.clientHeight)
+   * @param {number} docH   hauteur du cadre document
+   */
+  _syncCaptionBottom(zoneH, docH) {
+    if (!this.el) return;
+    const bottomGap = Math.max(0, Math.round((zoneH - docH) / 2));
+    this.el.style.setProperty('--doc-ov-cap-bottom', bottomGap + 'px');
   }
 
   /**
