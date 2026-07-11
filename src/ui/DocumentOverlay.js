@@ -87,6 +87,8 @@ export class DocumentOverlay {
     this._text     = null;
     this._textBody = null;
     this._caption  = null;
+    this._revealed = false;   // la révélation (tracé) rejoue à CHAQUE ouverture
+    this._drawing  = false;
 
     if (data.type === 'text') this._buildText(data);
     else                      this._buildDocument(data);
@@ -170,6 +172,14 @@ export class DocumentOverlay {
     const col = this.config.LAYOUT?.sideColPx?.(vW)
              ?? Math.round(Math.min(300, vW * 0.19));
     this.el.style.setProperty('--doc-ov-side', col + 'px');
+
+    // Marge verticale (haut = bas) réglable en config.
+    const marginVh = this.config.DOCS?.overlay?.margin_v_vh ?? 11;
+    this.el.style.setProperty('--doc-ov-margin-v', marginVh + 'vh');
+
+    // Largeur max du texte « À Propos », réglable en config.
+    const aboutFrac = this.config.DOCS?.overlay?.about_max_frac ?? 0.94;
+    this.el.style.setProperty('--doc-ov-about-frac', String(aboutFrac));
   }
 
   _onKeyDown(e) { if (e.key === 'Escape') this.close(); }
@@ -231,13 +241,18 @@ export class DocumentOverlay {
       return body.getBoundingClientRect().height <= avail + 1;
     };
 
-    // Borne haute : proportionnelle au viewport, jamais au-delà de TEXT_MAX_PX.
-    const hiStart = Math.min(TEXT_MAX_PX, Math.max(TEXT_MIN_PX, Math.round(window.innerHeight * 0.030)));
+    // Bornes réglables en config (repli sur les constantes du module).
+    const ov  = this.config.DOCS?.overlay ?? {};
+    const min = ov.about_min_px ?? TEXT_MIN_PX;
+    const max = ov.about_max_px ?? TEXT_MAX_PX;
+
+    // Borne haute : proportionnelle au viewport, jamais au-delà de `max`.
+    const hiStart = Math.min(max, Math.max(min, Math.round(window.innerHeight * 0.030)));
 
     if (fits(hiStart)) return;
 
     // Dichotomie : ~12 essais suffisent au dixième de pixel, un reflow chacun.
-    let lo = TEXT_MIN_PX, hi = hiStart;
+    let lo = min, hi = hiStart;
     for (let i = 0; i < 12 && hi - lo > 0.1; i++) {
       const mid = (lo + hi) / 2;
       if (fits(mid)) lo = mid; else hi = mid;
@@ -306,7 +321,15 @@ export class DocumentOverlay {
    */
   _revealDocument(animate) {
     if (!this._frames.every(f => f.ratio)) return;
+    if (this._revealed) return;          // une seule révélation par ouverture
+    this._revealed = true;
+
+    // Verrou anti-course : pendant l'animation d'entrée, le ResizeObserver ne
+    // doit pas repositionner (il remettrait strokeDashoffset à 0 et couperait
+    // le tracé). Levé une fois le rectangle entièrement dessiné.
+    this._drawing = true;
     this._layoutFrames(animate);
+    this._addTimer(() => { this._drawing = false; }, animate ? T.frameDraw + 260 : 0);
 
     const medias = this._row?.querySelectorAll('.doc-ov-media') ?? [];
     const revealDelay = animate ? T.frameDraw * 0.7 : 0;
@@ -480,8 +503,15 @@ export class DocumentOverlay {
     if (!row || !this._frames.length) return;
     if (!this._frames.every(f => f.ratio)) return;
 
-    const availW = row.clientWidth;
-    const availH = row.clientHeight;
+    // Proportion réglable en config : le document n'occupe qu'une fraction de
+    // la zone disponible (respiration autour). Défauts : 0.90 en hauteur, 1.0
+    // en largeur.
+    const ov = this.config.DOCS?.overlay ?? {};
+    const fracH = ov.doc_max_frac_h ?? 0.90;
+    const fracW = ov.doc_max_frac_w ?? 1.00;
+
+    const availW = row.clientWidth  * fracW;
+    const availH = row.clientHeight * fracH;
     if (availW < 8 || availH < 8) return;
 
     // ── Incrustation : TAILLE FIXE UNIFORME, centrée. Tous les embeds (doc-3,
@@ -548,16 +578,41 @@ export class DocumentOverlay {
 
   /* ── Observation de la zone ────────────────────────────────────────────── */
 
-  /** Relance la mise en page dès que la zone utile change (throttlé par rAF). */
+  /**
+   * Relance la mise en page quand la zone utile change RÉELLEMENT (resize,
+   * plein écran, rotation). Throttlé par rAF.
+   *
+   * ⚠️ Un ResizeObserver émet TOUJOURS une notification à l'observation. Sans
+   * garde, cette première notification appelait _layoutFrames(false), qui pose
+   * strokeDashoffset=0 → le rectangle apparaissait déjà tracé et l'animation
+   * d'apparition était perdue. On ignore donc la première notification, et on
+   * ne réagit ensuite qu'à un vrai changement de dimensions.
+   */
   _observe(target) {
     if (!target || typeof ResizeObserver === 'undefined') return;
-    this._ro = new ResizeObserver(() => {
+    this._roPrimed = false;
+    this._roLast   = { w: 0, h: 0 };
+    this._ro = new ResizeObserver(entries => {
+      const cr = entries[0]?.contentRect;
+      if (!cr) return;
+      // 1ʳᵉ notification (installation) : on mémorise et on laisse l'animation
+      // initiale jouer sans interférence.
+      if (!this._roPrimed) {
+        this._roPrimed = true;
+        this._roLast = { w: Math.round(cr.width), h: Math.round(cr.height) };
+        return;
+      }
+      // Ignorer le bruit sous-pixel : ne réagir qu'à un changement net.
+      if (Math.abs(cr.width  - this._roLast.w) < 2 &&
+          Math.abs(cr.height - this._roLast.h) < 2) return;
+      this._roLast = { w: Math.round(cr.width), h: Math.round(cr.height) };
+
       if (this._roRaf) cancelAnimationFrame(this._roRaf);
       this._roRaf = requestAnimationFrame(() => {
         this._roRaf = null;
-        if (!this.currentKey) return;
+        if (!this.currentKey || this._drawing) return;   // pas pendant le tracé
         if (this._text) this._fitText();
-        else            this._layoutFrames(false);   // repositionne sans rejouer le tracé
+        else            this._layoutFrames(false);       // repositionne sans rejouer le tracé
       });
     });
     this._ro.observe(target);
