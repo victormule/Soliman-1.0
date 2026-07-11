@@ -1321,15 +1321,14 @@ body.peine-aim #cursor.aim-hot {
 
 .doc-ov-stage {
   position: absolute;
-  inset: 0;
-  display: block;                     /* la grille .doc-ov-inner occupe tout */
-  /* Seuls le haut (titre + flèche) et le bas (navbar) sont réservés.
-     Les colonnes latérales sont gérées par la grille, PAS par le padding. */
-  padding:
-    var(--doc-ov-margin-v, clamp(74px, 13vh, 150px))
-    0
-    var(--doc-ov-margin-v, clamp(74px, 13vh, 150px))
-    0;
+  /* Marges verticales calculées en JS (--doc-ov-margin-top/-bot) : elles
+     intègrent un plancher qui garantit qu'on ne chevauche JAMAIS le titre en
+     haut ni la navbar en bas, quelle que soit la hauteur de fenêtre. */
+  top:    var(--doc-ov-margin-top, clamp(74px, 13vh, 150px));
+  bottom: var(--doc-ov-margin-bot, clamp(74px, 13vh, 150px));
+  left:  0;
+  right: 0;
+  display: grid;
 }
 
 .doc-ov-inner {
@@ -1337,17 +1336,18 @@ body.peine-aim #cursor.aim-hot {
   height: 100%;
   min-height: 0;
 
-  /* Grille pleine largeur, 3 pistes SYMÉTRIQUES :
-       [--doc-ov-side] [1fr centre] [--doc-ov-side]
-     Les deux gouttières étant strictement égales, la piste centrale est
-     mathématiquement centrée dans la fenêtre, à toute largeur. La légende vit
-     dans la gouttière gauche, les boutons flottent au-dessus de la droite. */
+  /* 3 pistes SYMÉTRIQUES : [side] [1fr] [side]. Gouttières égales → centre
+     mathématiquement centré. align-items: stretch → la légende et le document
+     occupent CHACUN toute la hauteur, sans interférer l'un avec l'autre
+     (fini la légende qui "part en haut" quand le doc est plus grand). */
   display: grid;
   grid-template-columns:
     var(--doc-ov-side, clamp(140px, 20vw, 300px))
     minmax(0, 1fr)
     var(--doc-ov-side, clamp(140px, 20vw, 300px));
-  align-items: center;
+  grid-template-rows: 100%;           /* UNE rangée = toute la hauteur → availH
+                                         stable, plus de saut de taille du doc */
+  align-items: stretch;
   column-gap: 0;
 }
 
@@ -1355,25 +1355,24 @@ body.peine-aim #cursor.aim-hot {
    gouttière droite (piste 3) réservée aux boutons documents — sinon le texte
    passe sous les boutons. Il s'arrête donc à la fin de la piste 2. */
 .doc-ov-inner > .doc-ov-text {
-  /* Occupe la colonne gauche + le centre, PAS la gouttière droite (boutons). */
+  /* Colonne gauche + centre, jamais la gouttière droite (boutons). */
   grid-column: 1 / 3;
   justify-self: center;
-  max-width: calc(min(1150px, 100%) * var(--doc-ov-about-frac, 0.90));
+  max-width: calc(min(1100px, 100%) * var(--doc-ov-about-frac, 0.90));
 
   width: 100%;
   height: 100%;
-  overflow-y: auto;                   /* défile si le texte dépasse */
+  min-height: 0;
+  overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;            /* centré vertical tant que ça tient */
-  align-items: center;                /* centré horizontal */
 
   color: rgba(255, 255, 255, 0.94);
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   letter-spacing: 0.012em;
-  /* Scrollbar discrète */
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.22) transparent;
 }
@@ -1383,14 +1382,14 @@ body.peine-aim #cursor.aim-hot {
 
 /* Quand le texte déborde et défile, justify-content:center couperait le haut :
    on repasse en flux normal dès que ça dépasse (le navigateur gère via auto). */
-.doc-ov-text.is-scroll { justify-content: flex-start; }
+.doc-ov-inner > .doc-ov-text.is-scroll { justify-content: flex-start; }
 
 /* Corps du texte « À Propos ». */
 .doc-ov-text-body {
   width: 100%;
-  max-width: 62ch;
+  margin: 0 auto;                     /* bloc centré dans la colonne */
   padding: 0.5em 0;
-  text-align: center;                 /* texte centré, comme demandé */
+  text-align: left;                   /* texte aligné à gauche (lecture) */
 }
 
 .doc-ov-text p {
@@ -1425,14 +1424,14 @@ body.peine-aim #cursor.aim-hot {
 /* Colonne CENTRALE (piste 2) : les cadres, centrés, sur toute la hauteur. */
 .doc-ov-row {
   grid-column: 2;
-  height: 100%;
   min-height: 0;
   min-width: 0;
-  padding: 0 clamp(8px, 1.2vw, 20px);   /* n'effleure pas les gouttières */
+  height: 100%;
+  padding: 0 clamp(8px, 1.2vw, 20px);
   display: flex;
+  align-items: center;                /* document centré verticalement */
+  justify-content: center;            /* et horizontalement */
   gap: clamp(14px, 2.2vw, 38px);
-  align-items: center;
-  justify-content: center;
 }
 
 /* Dimensions posées en JS (width/height en px, déduits du ratio du média). */
@@ -1526,11 +1525,14 @@ body.peine-aim #cursor.aim-hot {
    Largeur bornée pour rester lisible ; le texte se cale contre le document. */
 .doc-ov-caption {
   grid-column: 1;
-  justify-self: stretch;              /* occupe toute la gouttière gauche */
-  align-self: center;
-  /* Respiration : marge au bord gauche, et espace avant le document à droite. */
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;            /* légende centrée verticalement */
+  align-items: flex-end;              /* calée à droite, contre le document */
   padding: 0 clamp(18px, 1.8vw, 32px) 0 clamp(20px, 3vw, 48px);
-  text-align: right;                  /* texte calé à droite, contre le document */
+  text-align: right;
 
   opacity: 0;
   transform: translateX(-10px);
