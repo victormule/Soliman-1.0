@@ -1347,10 +1347,13 @@ body.peine-aim #cursor.aim-hot {
           le document reste centré entre les deux colonnes latérales.
      La colonne des boutons (#doc-btns) flotte au-dessus, dans cette gouttière. */
   display: grid;
+  /* Colonnes latérales = --doc-ov-side, posé en JS depuis CONFIG.LAYOUT.sideColPx
+     (la MÊME source que la largeur des boutons documents). Repli en clamp() si
+     le JS n'a pas encore écrit la variable. */
   grid-template-columns:
-    clamp(150px, 21vw, 300px)
+    var(--doc-ov-side, clamp(150px, 21vw, 300px))
     minmax(0, 1fr)
-    clamp(150px, 21vw, 300px);
+    var(--doc-ov-side, clamp(150px, 21vw, 300px));
   align-items: center;
   column-gap: clamp(16px, 2vw, 36px);
 }
@@ -1572,7 +1575,7 @@ body.peine-aim #cursor.aim-hot {
       clamp(34px, 9vh, 58px)
       clamp(120px, 19vw, 180px);
   }
-  .doc-ov-caption { width: clamp(110px, 17vw, 190px); }
+  /* La légende suit --doc-ov-side comme partout : pas d'override de largeur. */
   .doc-ov-caption   { margin-top: 10px; }
   .doc-ov-cap-text  { font-size: clamp(0.66rem, 1.6vw, 0.84rem); line-height: 1.4; }
   .doc-ov-source    { margin-top: 0.5em; letter-spacing: 0.15em; }
