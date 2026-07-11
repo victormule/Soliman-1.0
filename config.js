@@ -98,6 +98,17 @@ window.CONFIG = {
         about_max_frac:  1.00,  // largeur max du texte « À Propos » (fraction zone)
         about_min_px:    10,    // taille de police mini du texte (px)
         about_max_px:    30,    // taille de police maxi du texte (px)
+
+        // ── LOUPE (cercle de zoom, documents 1 & 2 uniquement) ────────────
+        // Tailles exprimées en fraction de min(largeur, hauteur) du viewport :
+        // la loupe garde ainsi une proportion cohérente sur tout écran.
+        loupe_idle_frac: 0.045, // Ø du cercle indicateur hors image (frac vp)
+        loupe_zoom_frac: 0.22,  // Ø de la loupe au survol d'une image (frac vp)
+        loupe_zoom:      3.0,   // force du grossissement (×)
+        loupe_idle_min:  30,    // garde-fous px (petit écran)
+        loupe_idle_max:  60,
+        loupe_zoom_min:  130,
+        loupe_zoom_max:  260,
       },
 
       // ── Bouton « À Propos » ────────────────────────────────────────────
@@ -233,7 +244,7 @@ window.CONFIG = {
     light: {
       craneFinalFrac: 0.25,
       igniteMs:       5000,
-      igniteDelay:    500,
+      igniteDelay:    2600,
       staggerMs:      260,
       returnMs:       3000,
     },
