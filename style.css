@@ -1372,17 +1372,62 @@ body.peine-aim #cursor.aim-hot {
   flex-direction: column;
   justify-content: center;
   align-items: flex-end;
-  padding: 0 clamp(16px, 1.6vw, 28px) 0 clamp(18px, 2.4vw, 40px);
+  /* Espace à droite pour la barre verticale (padding-right accru). */
+  padding: 0 clamp(24px, 2.2vw, 40px) 0 clamp(18px, 2.4vw, 40px);
   text-align: right;
-
-  opacity: 0;
-  transform: translateX(-10px);
-  transition:
-    opacity 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.doc-ov-caption.in { opacity: 1; transform: translateX(0); }
+/* ── Barre verticale fine à droite de la légende ────────────────────────────
+   Filet doré vertical, centré sur la hauteur de la légende. Apparition
+   cinématographique : il se DESSINE du centre vers les deux extrémités
+   (scaleY 0 → 1), après quoi le texte se révèle. */
+.doc-ov-caption::after {
+  content: '';
+  position: absolute;
+  right: clamp(11px, 1vw, 18px);
+  top: 50%;
+  width: 1px;
+  height: min(58%, 12em);
+  background: linear-gradient(
+      to bottom,
+      rgba(210, 175, 90, 0) 0%,
+      rgba(210, 175, 90, 0.75) 22%,
+      rgba(210, 175, 90, 0.75) 78%,
+      rgba(210, 175, 90, 0) 100%);
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
+  opacity: 0;
+  transition:
+    transform 1100ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 700ms ease;
+}
+
+/* Le contenu textuel : légère montée + fondu, décalé APRÈS le tracé du filet. */
+.doc-ov-caption .doc-ov-cap-text,
+.doc-ov-caption .doc-ov-source {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition:
+    opacity 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 1100ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Séquence d'apparition, déclenchée par .in (posé par le JS) ──────────── */
+.doc-ov-caption.in::after {
+  opacity: 1;
+  transform: translateY(-50%) scaleY(1);       /* le filet se dessine d'abord */
+}
+.doc-ov-caption.in .doc-ov-cap-text {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 620ms;                      /* puis le titre */
+}
+.doc-ov-caption.in .doc-ov-source {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 860ms;                      /* enfin la source */
+}
+
 
 /* ── TEXTE « À PROPOS » — centré dans la zone centrale (mêmes bornes que le
    document : entre les deux colonnes), défilable, texte aligné à gauche. ── */
@@ -1617,4 +1662,51 @@ body.peine-aim #cursor.aim-hot {
   .doc-ov-text p,
   .doc-ov-caption { transform: none; transition-duration: 400ms; }
   .doc-ov-rect    { transition: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOUPE — documents images (doc-1, doc-2)
+   Cercle attaché au curseur : petit indicateur partout, grande loupe ×3
+   au survol d'une image. Filet blanc discret.
+   ══════════════════════════════════════════════════════════════════ */
+.doc-ov-loupe {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  z-index: 9998;                       /* sous le curseur custom (#cursor:9999) */
+  pointer-events: none;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background-repeat: no-repeat;
+  background-color: rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 6px 26px rgba(0, 0, 0, 0.45);
+  /* Transition douce entre l'indicateur et la loupe. La position (left/top) est
+     posée en JS à chaque frame : surtout NE PAS la mettre en transition. */
+  transition:
+    width 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 260ms ease,
+    border-color 260ms ease;
+  will-change: left, top, width, height;
+}
+
+/* Mode loupe (sur image) : bord un peu plus present, halo interne subtil. */
+.doc-ov-loupe.is-zoom {
+  border-color: rgba(255, 255, 255, 0.7);
+  background-color: #0b0b0b;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 10px 34px rgba(0, 0, 0, 0.55),
+    inset 0 0 18px rgba(0, 0, 0, 0.35);
+}
+
+/* Sur écran tactile, pas de loupe (pas de curseur qui plane). */
+@media (pointer: coarse) {
+  .doc-ov-loupe { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doc-ov-loupe { transition: opacity 200ms ease; }
 }
