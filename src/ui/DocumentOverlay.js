@@ -32,6 +32,8 @@
  * ils font ignorer pathLength au navigateur et le tracé se fend.
  */
 
+import { DocumentLoupe } from './DocumentLoupe.js';
+
 const OVERLAY_ID = 'doc-overlay';
 
 /* Durées (ms) — accordées au langage visuel du site. */
@@ -52,6 +54,9 @@ export class DocumentOverlay {
 
     /** Clé affichée, ou null. */
     this.currentKey = null;
+
+    /** Loupe (documents images uniquement). */
+    this._loupe = new DocumentLoupe();
 
     this.el    = null;   // racine
     this.inner = null;   // zone de contenu
@@ -90,6 +95,8 @@ export class DocumentOverlay {
     this._revealed = false;   // la révélation (tracé) rejoue à CHAQUE ouverture
     this._drawing  = false;
 
+    this._loupe.disable();
+
     if (data.type === 'text') this._buildText(data);
     else                      this._buildDocument(data);
 
@@ -103,6 +110,7 @@ export class DocumentOverlay {
     this.currentKey = null;
     this._clearTimers();
     this._disconnectObserver();
+    this._loupe.disable();
     this.el.classList.remove('visible');
     document.removeEventListener('keydown', this._onKeyDown);
 
@@ -127,6 +135,7 @@ export class DocumentOverlay {
   destroy() {
     this._clearTimers();
     this._disconnectObserver();
+    this._loupe.disable();
     document.removeEventListener('keydown', this._onKeyDown);
     this.currentKey = null;
     this._frames = [];
@@ -351,6 +360,17 @@ export class DocumentOverlay {
     const revealDelay = animate ? T.frameDraw * 0.7 : 0;
     this._addTimer(() => medias.forEach(m => m.classList.add('in')), revealDelay);
     this._addTimer(() => this._caption?.classList.add('in'), revealDelay + 120);
+
+    // Loupe : seulement pour les documents « images » (doc-1, doc-2).
+    const data = this.config.DOCUMENTS?.[this.currentKey];
+    if (data?.type === 'images') {
+      const targets = [];
+      this._row?.querySelectorAll('.doc-ov-frame').forEach(frame => {
+        const img = frame.querySelector('img.doc-ov-media');
+        if (img) targets.push({ frame, img });
+      });
+      if (targets.length) this._loupe.enable(this.el, targets);
+    }
   }
 
   /** Cadre d'image : le ratio est lu sur l'image, puis le document est révélé. */
