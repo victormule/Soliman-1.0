@@ -94,16 +94,16 @@ window.CONFIG = {
       overlay: {
         doc_max_frac_h:  0.95,  // hauteur max d'un document = fraction de la zone
         doc_max_frac_w:  1.00,  // largeur max d'un document = fraction de la zone
-        margin_v_vh:     20,    // marge haute ET basse de l'overlay (% vh)
-        about_max_frac:  1.00,  // largeur max du texte « À Propos » (fraction zone)
-        about_min_px:    10,    // taille de police mini du texte (px)
+        margin_v_vh:     18,    // marge haute ET basse de l'overlay (% vh)
+        about_max_frac:  1.10,  // largeur max du texte « À Propos » (fraction zone)
+        about_min_px:    12,    // taille de police mini du texte (px)
         about_max_px:    30,    // taille de police maxi du texte (px)
 
         // ── LOUPE (cercle de zoom, documents 1 & 2 uniquement) ────────────
         // Tailles exprimées en fraction de min(largeur, hauteur) du viewport :
         // la loupe garde ainsi une proportion cohérente sur tout écran.
         loupe_idle_frac: 0.045, // Ø du cercle indicateur hors image (frac vp)
-        loupe_zoom_frac: 0.32,  // Ø de la loupe au survol d'une image (frac vp)
+        loupe_zoom_frac: 0.35,  // Ø de la loupe au survol d'une image (frac vp)
         loupe_zoom:      2.5,   // force du grossissement (×)
         loupe_idle_min:  30,    // garde-fous px (petit écran)
         loupe_idle_max:  60,
@@ -118,7 +118,7 @@ window.CONFIG = {
       about_gap_vh: 5.0,   // espacement sous « À Propos » (% vh), > gap_vh
 
       // Contenu — chaque action est une clé de CONFIG.DOCUMENTS
-      labels:  ['Document 1', 'Document 2', 'Document 3', 'Document 4'],
+      labels:  ['Un jugement', 'Un catalogue de musée', 'Un court-métrage', 'Une lettre au Président de la république'],
       actions: ['doc-1', 'doc-2', 'doc-3', 'doc-4'],
     },
 
@@ -127,8 +127,8 @@ window.CONFIG = {
       appear_at:        7000,   // ms depuis enter() — régler ici indépendamment
 
       // Layout
-      width:            0.85,   // Fraction largeur écran (plafond absolu)
-      cell_width:       0.26,   // Largeur idéale d'UNE cellule (fraction vW).
+      width:            0.90,   // Fraction largeur écran (plafond absolu)
+      cell_width:       0.28,   // Largeur idéale d'UNE cellule (fraction vW).
                                 // La barre vaut min(width·vW, N·cell_width·vW) :
                                 // en passant de 3 à 2 boutons elle se resserre au
                                 // lieu d'étirer démesurément chaque cellule.
@@ -152,7 +152,7 @@ window.CONFIG = {
 
       // Contenu
       // « À Propos » a migré dans la colonne des boutons documents.
-      labels:  ['Carnet de Recherche', 'Collaboration'],
+      labels:  ['Carnet de Recherche', 'Collaboration avec de jeunes citoyens'],
       actions: [null, 'collab'],  // 'collab' = aller Collaboration
     },
 
