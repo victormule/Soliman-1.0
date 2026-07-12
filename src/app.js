@@ -14,6 +14,7 @@ import { TorchSystem }        from './systems/TorchSystem.js';
 import { BackgroundManager }  from './systems/BackgroundManager.js';
 import { TransitionManager }  from './core/TransitionManager.js';
 import { OrientationLock }    from './systems/OrientationLock.js';
+import { TouchHover }         from './systems/TouchHover.js';
 import { Title }              from './ui/Title.js';
 import { DocumentButtons }    from './ui/DocumentButtons.js';
 import { NavigationBar }      from './ui/NavigationBar.js';
@@ -69,6 +70,10 @@ const audio      = new AudioManager(C);
    on lui confiera l'AudioContext central dès qu'il sera déverrouillé (au
    clic de démarrage), pour couper toute la synthèse Web Audio d'un coup. */
 OrientationLock.init({ message: 'Veuillez tourner votre appareil' });
+
+/* Survol tactile : au glissé du doigt, active les effets de hover de l'élément
+   réellement sous le doigt (contourne l'implicit pointer capture du tactile). */
+TouchHover.init();
 const torch      = new TorchSystem(C);
 const bgMgr      = new BackgroundManager();
 const transition = new TransitionManager(C);
