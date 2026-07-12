@@ -610,6 +610,11 @@ body.peine-aim #cursor.hotspot::after {
   transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+/* Bouton « À Propos » : même gabarit que les documents, teinte dorée subtile
+   pour le distinguer en tête de colonne. */
+.doc-btn--about .doc-rect { stroke: rgba(210, 175, 90, 0.55); }
+.doc-btn--about .doc-label { fill: rgba(210, 175, 90, 0.85); }
+
 .doc-btn.hovered {
   z-index: 2;
   transform: scaleX(1.08) scaleY(1.12) !important;
