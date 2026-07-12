@@ -298,14 +298,14 @@ export class ArrowBase {
   _attachHover(svg, c, p) {
     const glow = 'drop-shadow(0 0 7px rgba(255,210,80,0.80)) drop-shadow(0 0 20px rgba(255,170,30,0.50))';
 
-    this.el.onmouseenter = () => {
+    this.el.onpointerenter = () => {
       // SVG grossit
       svg.style.transform = 'scale(1.22)';
       // Couleur et filtre dorés
       applyGoldenHover([c, p], []);
     };
 
-    this.el.onmouseleave = () => {
+    this.el.onpointerleave = () => {
       // SVG revient à taille normale
       svg.style.transform = 'scale(1)';
       // Couleurs d'origine
