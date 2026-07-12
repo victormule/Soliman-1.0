@@ -100,7 +100,7 @@ export class Fullscreen {
     const svgEl = this.el.querySelector('svg');
     const strokes = this.el.querySelectorAll('[stroke]');
 
-    this.el.onmouseenter = () => {
+    this.el.onpointerenter = () => {
       svgEl.style.transform = 'scale(1.22)';
       strokes.forEach(el => {
         el.style.stroke = 'rgba(255,230,130,0.95)';
@@ -108,7 +108,7 @@ export class Fullscreen {
       });
     };
 
-    this.el.onmouseleave = () => {
+    this.el.onpointerleave = () => {
       svgEl.style.transform = 'scale(1)';
       strokes.forEach(el => {
         el.style.stroke = stroke;
