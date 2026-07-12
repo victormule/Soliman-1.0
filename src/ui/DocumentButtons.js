@@ -236,7 +236,9 @@ export class DocumentButtons {
   attachHover() {
     const allBtns = Array.from(this.el.querySelectorAll('.doc-btn'));
     allBtns.forEach((btn, i) => {
-      btn.onmouseenter = () => {
+      // pointerenter/leave couvrent la souris ET le tactile : au glissé du doigt
+      // sur un bouton, l'effet de survol s'active comme au passage de la souris.
+      btn.onpointerenter = () => {
         btn.classList.add('hovered');
         applyNeighborPush(allBtns, i);
         applyGoldenHover(
@@ -244,7 +246,7 @@ export class DocumentButtons {
           [btn.querySelector('.doc-label')]
         );
       };
-      btn.onmouseleave = () => {
+      btn.onpointerleave = () => {
         btn.classList.remove('hovered');
         clearNeighborPush(allBtns);
         const r = btn.querySelector('.doc-rect');
