@@ -1,20 +1,105 @@
 /**
  * DocumentButtons.js
- * Colonne haut-droite de la scène phrénologie.
- *
- *   [ À Propos ]     ← même gabarit et même tracé SVG que les documents,
- *                       détaché par un espacement plus généreux (about_gap_vh)
- *   [ Document 1 ]
- *   [ Document 2 ]
- *   [ Document 3 ]
- *   [ Document 4 ]
- *
- * « À Propos » partage toute la mécanique des autres boutons (rectangle tracé
- * par stroke-dashoffset, libellé en fondu, hover doré, poussée des voisins) :
- * il est simplement le premier de la cascade d'apparition.
+ * Boutons documents phréno avec animation SVG
  */
 
 import { unifyFontSize, applyGoldenHover, applyNeighborPush, clearNeighborPush } from '../utils/helpers.js';
+
+/**
+ * Pose le texte d'un label dans un <text> SVG, sur UNE ou DEUX lignes selon la
+ * place. Si le libellé tient dans maxW à la taille courante, une seule ligne ;
+ * sinon on le coupe en deux lignes équilibrées (au blanc le plus central) via
+ * des <tspan>, verticalement centrées autour de cy.
+ *
+ * @param {SVGTextElement} textEl
+ * @param {string} label
+ * @param {number} maxW  largeur cible (px)
+ * @param {number} cx    centre horizontal (x)
+ * @param {number} cy    centre vertical (y)
+ */
+function setLabelLines(textEl, label, maxW, cx, cy) {
+  if (!textEl) return;
+
+  // Essai sur une ligne.
+  textEl.textContent = label;
+  const oneLine = textEl.getComputedTextLength();
+  if (oneLine <= maxW || !label.includes(' ')) {
+    // Tient (ou insécable) : on laisse tel quel, unifyFontSize fera le reste.
+    textEl.setAttribute('data-lines', '1');
+    return;
+  }
+
+  // Deux lignes : couper au blanc le plus proche du milieu (coupure équilibrée).
+  const words = label.split(' ');
+  let best = 1, bestDiff = Infinity;
+  const total = label.length;
+  let acc = 0;
+  for (let i = 0; i < words.length - 1; i++) {
+    acc += words[i].length + 1;
+    const diff = Math.abs(acc - total / 2);
+    if (diff < bestDiff) { bestDiff = diff; best = i + 1; }
+  }
+  const line1 = words.slice(0, best).join(' ');
+  const line2 = words.slice(best).join(' ');
+
+  const fs = parseFloat(textEl.getAttribute('font-size')) || 12;
+  const lh = fs * 1.18;                       // interligne
+  textEl.textContent = '';
+  textEl.setAttribute('data-lines', '2');
+
+  const t1 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+  t1.setAttribute('x', cx);
+  t1.setAttribute('y', cy - lh / 2);
+  t1.textContent = line1;
+
+  const t2 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+  t2.setAttribute('x', cx);
+  t2.setAttribute('y', cy + lh / 2);
+  t2.textContent = line2;
+
+  textEl.appendChild(t1);
+  textEl.appendChild(t2);
+}
+
+/**
+ * Comme unifyFontSize, mais gère les labels sur deux lignes (<tspan>). Mesure
+ * la ligne la plus large de chaque label, réduit la police jusqu'à ce que toutes
+ * tiennent dans maxWidth, applique la taille commune, puis repositionne les
+ * tspans (l'interligne dépend de la taille finale).
+ */
+function unifyFontSizeMultiline(textElements, maxWidth, startSize) {
+  const widthOf = (txt) => {
+    const spans = txt.querySelectorAll('tspan');
+    if (!spans.length) return txt.getComputedTextLength();
+    let m = 0;
+    spans.forEach(s => { m = Math.max(m, s.getComputedTextLength()); });
+    return m;
+  };
+
+  let unified = startSize;
+  textElements.forEach(txt => {
+    let fs = startSize;
+    txt.setAttribute('font-size', fs + 'px');
+    while (widthOf(txt) > maxWidth && fs > 6) {
+      fs -= 0.5;
+      txt.setAttribute('font-size', fs + 'px');
+    }
+    if (fs < unified) unified = fs;
+  });
+
+  textElements.forEach(txt => {
+    txt.setAttribute('font-size', unified + 'px');
+    // Repositionner les deux lignes autour du centre à la taille finale.
+    const spans = txt.querySelectorAll('tspan');
+    if (spans.length === 2) {
+      const cy = parseFloat(txt.getAttribute('y')) || 0;
+      const lh = unified * 1.18;
+      spans[0].setAttribute('y', cy - lh / 2);
+      spans[1].setAttribute('y', cy + lh / 2);
+    }
+  });
+  return unified;
+}
 
 export class DocumentButtons {
   constructor(config) {
@@ -37,12 +122,6 @@ export class DocumentButtons {
       w: Math.round(Math.max(D.width_min, Math.min(D.width_max, wRaw))),
       h: Math.round(Math.max(D.height_min, Math.min(D.height_max, hRaw)))
     };
-  }
-
-  /** Libellés affichés, « À Propos » en tête. */
-  _allLabels() {
-    const D = this.config.DOCS;
-    return [D.about_label ?? 'À Propos', ...D.labels];
   }
 
   /**
@@ -68,21 +147,14 @@ export class DocumentButtons {
     this.el.style.top = (D.top_pct ?? 3.2) + '%';
     this.el.style.gap = Math.max(4, Math.round(vH * (D.gap_vh ?? 1.8) / 100)) + 'px';
 
-    // Respiration sous « À Propos » : nettement supérieure au gap courant, pour
-    // le détacher du groupe des documents. Exprimée en vh → suit le viewport.
-    const aboutGap = Math.max(10, Math.round(vH * (D.about_gap_vh ?? 5.0) / 100));
-
-    const labels = this._allLabels();
-
     if (animate) {
       // Construction complète
       this.el.innerHTML = '';
-      labels.forEach((label, i) => {
+      this.config.DOCS.labels.forEach((label, i) => {
         const btn = document.createElement('div');
-        btn.className = 'doc-btn' + (i === 0 ? ' doc-btn--about' : '');
+        btn.className = 'doc-btn';
         btn.style.width = w + 'px';
         btn.style.height = h + 'px';
-        if (i === 0) btn.style.marginBottom = aboutGap + 'px';
         btn.innerHTML = `
           <svg width="${w}" height="${h}">
             <rect class="doc-rect"
@@ -93,16 +165,19 @@ export class DocumentButtons {
                   font-size="${fontSizeStart}"
                   font-family="${f?.family ?? 'Cinzel, serif'}"
                   font-weight="${f?.weight ?? 400}"
-                  letter-spacing="${f?.spacing ?? '0.18em'}">${label}</text>
+                  letter-spacing="${f?.spacing ?? '0.18em'}"></text>
           </svg>`;
+        // Le texte est posé APRÈS insertion (mesure nécessaire pour décider
+        // d'un éventuel passage sur deux lignes).
         this.el.appendChild(btn);
+        setLabelLines(btn.querySelector('.doc-label'), label, w * 0.82, w / 2, h / 2);
       });
     } else {
       // Resize seulement
+      const labels = this.config.DOCS.labels;
       this.el.querySelectorAll('.doc-btn').forEach((btn, i) => {
         btn.style.width = w + 'px';
         btn.style.height = h + 'px';
-        if (i === 0) btn.style.marginBottom = aboutGap + 'px';
         const rect = btn.querySelector('.doc-rect');
         const label = btn.querySelector('.doc-label');
         const svg = btn.querySelector('svg');
@@ -115,12 +190,14 @@ export class DocumentButtons {
         label.setAttribute('x', w / 2);
         label.setAttribute('y', h / 2);
         label.setAttribute('font-size', fontSizeStart + 'px');
+        // Recalcule le découpage 1/2 lignes à la nouvelle largeur.
+        setLabelLines(label, labels[i] ?? label.textContent, w * 0.82, w / 2, h / 2);
       });
     }
 
-    // Uniformiser police
+    // Uniformiser la police en tenant compte des labels sur deux lignes.
     const allTexts = Array.from(this.el.querySelectorAll('.doc-label'));
-    unifyFontSize(allTexts, maxTextW, fontSizeStart);
+    unifyFontSizeMultiline(allTexts, maxTextW, fontSizeStart);
   }
 
   /**
@@ -150,24 +227,21 @@ export class DocumentButtons {
   }
 
   /**
-   * Affiche avec animation.
-   * @param {Function[]} onClickCallbacks un callback par DOCUMENT, dans l'ordre
-   *                                      de CONFIG.DOCS.labels
-   * @param {Function}   onAboutClick     callback du bouton « À Propos »
+   * Affiche avec animation
    */
-  show(onClickCallbacks, onAboutClick) {
+  show(onClickCallbacks) {
     this.buildDOM(true);
     this.el.style.opacity = '';
     this.el.classList.add('visible');
 
     const allBtns = this.attachHover();
 
-    // Index 0 = « À Propos », puis les documents (décalage de 1).
-    allBtns.forEach((btn, i) => {
-      btn.onclick = (i === 0)
-        ? () => onAboutClick?.()
-        : () => onClickCallbacks?.[i - 1]?.();
-    });
+    // Attacher clicks
+    if (onClickCallbacks) {
+      allBtns.forEach((btn, i) => {
+        btn.onclick = () => onClickCallbacks[i]?.();
+      });
+    }
 
     // Animation cascade
     allBtns.forEach((btn, i) => {
