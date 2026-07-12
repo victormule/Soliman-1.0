@@ -27,7 +27,7 @@ const HOVER_SELECTOR = [
   '.roman-btn',
   '[data-arrow]',
   '#fs-btn',
-  '#skip-btn',
+  '.skip-wrap',
   '.hotspot-zone',
 ].join(',');
 
