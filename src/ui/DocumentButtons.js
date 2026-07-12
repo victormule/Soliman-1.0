@@ -127,6 +127,27 @@ export class DocumentButtons {
   /**
    * Construit le DOM des boutons
    */
+  /** Crée un bouton (cadre SVG + label vide, texte posé ensuite). */
+  _makeButton(label, w, h, perim, fontSizeStart, f) {
+    const btn = document.createElement('div');
+    btn.className = 'doc-btn';
+    btn.style.width = w + 'px';
+    btn.style.height = h + 'px';
+    btn.innerHTML = `
+      <svg width="${w}" height="${h}">
+        <rect class="doc-rect"
+              x="1" y="1" width="${w-2}" height="${h-2}"
+              stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>
+        <text class="doc-label"
+              x="${w/2}" y="${h/2}"
+              font-size="${fontSizeStart}"
+              font-family="${f?.family ?? 'Cinzel, serif'}"
+              font-weight="${f?.weight ?? 400}"
+              letter-spacing="${f?.spacing ?? '0.18em'}"></text>
+      </svg>`;
+    return btn;
+  }
+
   buildDOM(animate) {
     const D = this.config.DOCS;
     const { w, h } = this.getSizePx();
@@ -150,31 +171,33 @@ export class DocumentButtons {
     if (animate) {
       // Construction complète
       this.el.innerHTML = '';
-      this.config.DOCS.labels.forEach((label, i) => {
-        const btn = document.createElement('div');
-        btn.className = 'doc-btn';
-        btn.style.width = w + 'px';
-        btn.style.height = h + 'px';
-        btn.innerHTML = `
-          <svg width="${w}" height="${h}">
-            <rect class="doc-rect"
-                  x="1" y="1" width="${w-2}" height="${h-2}"
-                  stroke-dasharray="${perim}" stroke-dashoffset="${perim}"/>
-            <text class="doc-label"
-                  x="${w/2}" y="${h/2}"
-                  font-size="${fontSizeStart}"
-                  font-family="${f?.family ?? 'Cinzel, serif'}"
-                  font-weight="${f?.weight ?? 400}"
-                  letter-spacing="${f?.spacing ?? '0.18em'}"></text>
-          </svg>`;
-        // Le texte est posé APRÈS insertion (mesure nécessaire pour décider
-        // d'un éventuel passage sur deux lignes).
+
+      // ── Bouton « À Propos » en TÊTE de colonne ──────────────────────────
+      // Même gabarit et même tracé que les documents, séparé par un espacement
+      // plus généreux (about_gap_vh). Sa callback est fournie séparément à
+      // show(onClickCallbacks, onAboutClick).
+      if (D.about_label) {
+        const aboutBtn = this._makeButton(D.about_label, w, h, perim, fontSizeStart, f);
+        aboutBtn.classList.add('doc-btn--about');
+        aboutBtn.style.marginBottom =
+          Math.max(6, Math.round(vH * (D.about_gap_vh ?? 5) / 100)) + 'px';
+        this.el.appendChild(aboutBtn);
+        setLabelLines(aboutBtn.querySelector('.doc-label'), D.about_label, w * 0.82, w / 2, h / 2);
+      }
+
+      this.config.DOCS.labels.forEach((label) => {
+        const btn = this._makeButton(label, w, h, perim, fontSizeStart, f);
         this.el.appendChild(btn);
         setLabelLines(btn.querySelector('.doc-label'), label, w * 0.82, w / 2, h / 2);
       });
     } else {
-      // Resize seulement
-      const labels = this.config.DOCS.labels;
+      // Resize seulement.
+      // L'ordre DOM est : [À Propos ?] puis les documents. On reconstruit la
+      // liste des labels dans CE même ordre pour ré-wrapper correctement.
+      const domLabels = [];
+      if (D.about_label) domLabels.push(D.about_label);
+      this.config.DOCS.labels.forEach(l => domLabels.push(l));
+
       this.el.querySelectorAll('.doc-btn').forEach((btn, i) => {
         btn.style.width = w + 'px';
         btn.style.height = h + 'px';
@@ -191,8 +214,15 @@ export class DocumentButtons {
         label.setAttribute('y', h / 2);
         label.setAttribute('font-size', fontSizeStart + 'px');
         // Recalcule le découpage 1/2 lignes à la nouvelle largeur.
-        setLabelLines(label, labels[i] ?? label.textContent, w * 0.82, w / 2, h / 2);
+        setLabelLines(label, domLabels[i] ?? label.textContent, w * 0.82, w / 2, h / 2);
       });
+
+      // Réajuste l'espacement sous le bouton « À Propos ».
+      const aboutBtn = this.el.querySelector('.doc-btn--about');
+      if (aboutBtn) {
+        aboutBtn.style.marginBottom =
+          Math.max(6, Math.round(vH * (D.about_gap_vh ?? 5) / 100)) + 'px';
+      }
     }
 
     // Uniformiser la police en tenant compte des labels sur deux lignes.
@@ -229,19 +259,26 @@ export class DocumentButtons {
   /**
    * Affiche avec animation
    */
-  show(onClickCallbacks) {
+  show(onClickCallbacks, onAboutClick) {
     this.buildDOM(true);
     this.el.style.opacity = '';
     this.el.classList.add('visible');
 
     const allBtns = this.attachHover();
+    const hasAbout = !!this.config.DOCS.about_label;
 
-    // Attacher clicks
-    if (onClickCallbacks) {
-      allBtns.forEach((btn, i) => {
-        btn.onclick = () => onClickCallbacks[i]?.();
-      });
-    }
+    // Attacher les clics.
+    //  - si un bouton « À Propos » existe, il est en tête (index 0) et reçoit
+    //    onAboutClick ; les documents suivent (décalés de 1).
+    //  - sinon, les documents commencent à l'index 0.
+    allBtns.forEach((btn, i) => {
+      if (hasAbout && i === 0) {
+        btn.onclick = () => onAboutClick?.();
+      } else {
+        const docIdx = hasAbout ? i - 1 : i;
+        btn.onclick = () => onClickCallbacks?.[docIdx]?.();
+      }
+    });
 
     // Animation cascade
     allBtns.forEach((btn, i) => {
