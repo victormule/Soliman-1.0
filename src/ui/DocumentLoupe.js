@@ -31,8 +31,10 @@ export class DocumentLoupe {
     this._targets  = [];     // { frame, img }
     this._active   = false;
     this._onMove   = this._onMove.bind(this);
+    this._onUp     = this._onUp.bind(this);
     this._raf      = null;
     this._pending  = null;   // dernières coords souris en attente de frame
+    this._isTouch  = false;
   }
 
   /**
@@ -53,13 +55,31 @@ export class DocumentLoupe {
     this._el = el;
 
     this._active = true;
+    this._isTouch = window.matchMedia?.('(pointer: coarse)').matches
+                 || 'ontouchstart' in window;
+
+    // Souris : le survol suffit (pointermove). Tactile : le pointeur n'émet des
+    // mouvements que PENDANT un contact — on suit donc down + move, et on ne
+    // cache qu'au relâchement réel (up / cancel), jamais sur un pointerleave
+    // parasite émis en plein glissé (source de l'instabilité observée).
     root.addEventListener('pointermove', this._onMove, { passive: true });
-    root.addEventListener('pointerleave', () => this._hide(), { passive: true });
+    root.addEventListener('pointerdown', this._onMove, { passive: true });
+    if (this._isTouch) {
+      root.addEventListener('pointerup',     this._onUp, { passive: true });
+      root.addEventListener('pointercancel', this._onUp, { passive: true });
+    } else {
+      // Souris : on cache quand le curseur quitte réellement l'overlay.
+      root.addEventListener('pointerleave', this._onUp, { passive: true });
+    }
   }
 
   disable() {
     if (this._root) {
       this._root.removeEventListener('pointermove', this._onMove);
+      this._root.removeEventListener('pointerdown', this._onMove);
+      this._root.removeEventListener('pointerup', this._onUp);
+      this._root.removeEventListener('pointercancel', this._onUp);
+      this._root.removeEventListener('pointerleave', this._onUp);
     }
     if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; }
     this._el?.remove();
@@ -74,12 +94,20 @@ export class DocumentLoupe {
 
   _onMove(e) {
     if (!this._active) return;
+    // Toute reprise de mouvement réaffiche la loupe (si un up/cancel l'avait
+    // masquée). L'opacité effective est ensuite fixée par _setIdle/_setZoom.
+    if (this._el && this._el.style.opacity === '0') this._el.style.opacity = '1';
     this._pending = { x: e.clientX, y: e.clientY };
     if (this._raf) return;
     this._raf = requestAnimationFrame(() => {
       this._raf = null;
       if (this._pending) this._render(this._pending);
     });
+  }
+
+  /** Fin de contact/sortie réelle : on masque (sans détruire l'élément). */
+  _onUp() {
+    this._hide();
   }
 
   /** Dimensions courantes (proportionnelles au viewport, bornées). */
@@ -100,11 +128,24 @@ export class DocumentLoupe {
     const el = this._el;
     if (!el) return;
 
-    // Suit le curseur (centré dessus).
+    // Sur tactile, on décale la loupe AU-DESSUS du doigt pour qu'il ne la
+    // masque pas. Le point analysé (zoom) reste celui touché par le doigt (x,y) :
+    // seul l'affichage du cercle est décalé, pas la zone grossie.
+    let dispY = y;
+    if (this._isTouch) {
+      const { zoom } = this._dims();
+      const ov = this._config?.DOCS?.overlay ?? {};
+      const offFrac = ov.loupe_touch_offset ?? 0.85;
+      dispY = y - Math.round(zoom * offFrac);
+      // Garde la loupe entièrement visible : si le décalage la ferait sortir en
+      // haut, on la borne (le zoom, lui, continue de viser le point touché).
+      const half = zoom / 2;
+      if (dispY - half < 4) dispY = half + 4;
+    }
     el.style.left = x + 'px';
-    el.style.top  = y + 'px';
+    el.style.top  = dispY + 'px';
 
-    // Sur quelle image se trouve le curseur ?
+    // Sur quelle image se trouve le point touché (x,y) ?
     const hit = this._targets.find(t => {
       const r = t.frame.getBoundingClientRect();
       return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
