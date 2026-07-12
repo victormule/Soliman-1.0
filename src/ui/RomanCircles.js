@@ -148,7 +148,7 @@ export class RomanCircles {
         }));
 
         // Hover
-        btn.onmouseenter = () => {
+        btn.onpointerenter = () => {
           btn.classList.add('hovered');
           applyNeighborPush(allBtns, i);
           c.style.stroke = 'rgba(255,230,130,0.95)';
@@ -159,7 +159,7 @@ export class RomanCircles {
           this.setHoverTitle(title || null);
         };
 
-        btn.onmouseleave = () => {
+        btn.onpointerleave = () => {
           btn.classList.remove('hovered');
           clearNeighborPush(allBtns);
           c.style.stroke = 'rgba(255,255,255,0.72)';
