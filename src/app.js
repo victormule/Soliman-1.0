@@ -39,15 +39,21 @@ if (appEl) {
 /* ── 2. Curseur personnalisé ──────────────────────────────────── */
 const cursorEl = document.getElementById('cursor');
 if (cursorEl) {
-  document.addEventListener('pointermove', e => {
+  const moveCursor = e => {
     cursorEl.style.left = e.clientX + 'px';
     cursorEl.style.top  = e.clientY + 'px';
-  }, { passive: true });
+  };
+  // pointermove : suivi continu (souris + doigt en contact).
+  // pointerdown : positionnement immédiat dès que le doigt touche l'écran.
+  document.addEventListener('pointermove', moveCursor, { passive: true });
+  document.addEventListener('pointerdown', moveCursor, { passive: true });
 
-  document.addEventListener('mousedown', () => cursorEl.classList.add('active'));
-  document.addEventListener('mouseup',   () => cursorEl.classList.remove('active'));
+  document.addEventListener('pointerdown', () => cursorEl.classList.add('active'));
+  document.addEventListener('pointerup',   () => cursorEl.classList.remove('active'));
 
-  document.addEventListener('mouseover', e => {
+  // Détection des zones cliquables : pointerover couvre souris ET tactile
+  // (au premier contact, le curseur prend l'état « hotspot » sur un bouton).
+  document.addEventListener('pointerover', e => {
     const isClickable = e.target.closest(
       '[data-clickable], [data-arrow], .doc-btn, .roman-btn, .nav-btn-zone, #fs-btn'
     );
