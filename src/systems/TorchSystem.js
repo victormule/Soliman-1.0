@@ -43,10 +43,13 @@ export class TorchSystem {
   /* ─────────────────────────────────────── Souris ── */
 
   initMouse() {
-    document.addEventListener('pointermove', e => {
+    const track = e => {
       this.mouseX = e.clientX;
       this.mouseY = e.clientY;
-    }, { passive: true });
+    };
+    // pointermove : suivi continu ; pointerdown : cible immédiate au 1ᵉʳ contact.
+    document.addEventListener('pointermove', track, { passive: true });
+    document.addEventListener('pointerdown', track, { passive: true });
   }
 
   /* ─────────────────────────────── Cible torche ── */
@@ -314,4 +317,4 @@ export class TorchSystem {
     this.torchBaseRadius   = minDim * this._baseFrac;
     this.torchTargetRadius = minDim * this._targetFrac;
   }
-}
+                                                                        }
