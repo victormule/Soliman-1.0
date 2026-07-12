@@ -95,9 +95,9 @@ window.CONFIG = {
         doc_max_frac_h:  0.95,  // hauteur max d'un document = fraction de la zone
         doc_max_frac_w:  1.00,  // largeur max d'un document = fraction de la zone
         margin_v_vh:     18,    // marge haute ET basse de l'overlay (% vh)
-        about_max_frac:  1.10,  // largeur max du texte « À Propos » (fraction zone)
+        about_max_frac:  1.0,  // largeur max du texte « À Propos » (fraction zone)
         about_min_px:    12,    // taille de police mini du texte (px)
-        about_max_px:    30,    // taille de police maxi du texte (px)
+        about_max_px:    32,    // taille de police maxi du texte (px)
 
         // ── LOUPE (cercle de zoom, documents 1 & 2 uniquement) ────────────
         // Tailles exprimées en fraction de min(largeur, hauteur) du viewport :
