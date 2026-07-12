@@ -109,6 +109,11 @@ window.CONFIG = {
         loupe_idle_max:  60,
         loupe_zoom_min:  130,
         loupe_zoom_max:  260,
+
+        // Décalage VERTICAL de la loupe au-dessus du doigt sur écran tactile,
+        // en fraction du Ø de la loupe (0 = centrée sur le doigt, 0.9 = juste
+        // au-dessus). Évite que le doigt masque la zone grossie.
+        loupe_touch_offset: 0.85,
       },
 
       // ── Bouton « À Propos » ────────────────────────────────────────────
