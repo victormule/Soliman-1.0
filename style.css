@@ -1549,6 +1549,7 @@ body.peine-aim #cursor.aim-hot {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  touch-action: none;   /* le glissé du doigt pilote la loupe, pas le scroll */
   background: rgba(0, 0, 0, 0.32);
 }
 
@@ -1708,9 +1709,8 @@ body.peine-aim #cursor.aim-hot {
 }
 
 /* Sur écran tactile, pas de loupe (pas de curseur qui plane). */
-@media (pointer: coarse) {
-  .doc-ov-loupe { display: none !important; }
-}
+/* La loupe fonctionne aussi au TACTILE : elle suit le doigt (pointermove) et
+   affiche le zoom au contact d'une image. Pas de blocage mobile. */
 @media (prefers-reduced-motion: reduce) {
   .doc-ov-loupe { transition: opacity 200ms ease; }
 }
