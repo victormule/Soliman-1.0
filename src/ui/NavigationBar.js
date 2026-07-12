@@ -192,7 +192,7 @@ export class NavigationBar {
     };
 
     zones.forEach((zone, i) => {
-      zone.addEventListener('mouseenter', () => {
+      zone.addEventListener('pointerenter', () => {
         const tSepX = sepDefaultX.map((sx, si) => {
           if (si === i - 1) return sx - EXPAND;
           if (si === i) return sx + EXPAND;
@@ -207,7 +207,7 @@ export class NavigationBar {
         txts[i].setAttribute('fill', C.btn_color_hover);
       });
 
-      zone.addEventListener('mouseleave', () => {
+      zone.addEventListener('pointerleave', () => {
         const tTxtX = txts.map((_, ti) => x + (ti + 0.5) * cellW);
         animateSeps(sepDefaultX.slice(), tTxtX, -1);
         txts.forEach(t => t.setAttribute('fill', C.btn_color));
