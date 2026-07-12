@@ -976,7 +976,11 @@ export class Chapitre1Scene extends Scene {
       // - montre l'image hotspot associée
       // - met le curseur en mode actif
       // - affiche le titre contextuel
-      this.on(zone, 'mouseenter', () => {
+      // pointerenter/leave : couvre souris ET tactile. Sur mobile, le module
+      // TouchHover dispatche ces événements sur la zone réellement sous le doigt
+      // (le sélecteur .hotspot-zone y est enregistré), donc le survol des zones
+      // du crâne fonctionne aussi au glissé du doigt.
+      this.on(zone, 'pointerenter', () => {
         if (!this._interactiveReady || this._isTransitioningOut) return;
         this._showHotspotImg(h.img);
         cursor?.classList.add('active', 'hotspot');
@@ -987,7 +991,7 @@ export class Chapitre1Scene extends Scene {
       // - masque l'image associée
       // - restaure l'état du curseur
       // - supprime éventuellement le titre si le player ne le maintient pas
-      this.on(zone, 'mouseleave', () => {
+      this.on(zone, 'pointerleave', () => {
         if (!this._interactiveReady) return;
         this._hideHotspotImg();
         cursor?.classList.remove('hotspot');
@@ -1344,7 +1348,7 @@ export class Chapitre1Scene extends Scene {
 
     // Hover entrée :
     // accentue le bouton visuellement pour signaler son interactivité.
-    this.on(wrap, 'mouseenter', () => {
+    this.on(wrap, 'pointerenter', () => {
       wrap.classList.add('hovered');
       rect.setAttribute('stroke', 'rgba(255,230,130,0.95)');
       rect.style.filter =
@@ -1354,7 +1358,7 @@ export class Chapitre1Scene extends Scene {
 
     // Hover sortie :
     // restaure l'état visuel neutre du bouton.
-    this.on(wrap, 'mouseleave', () => {
+    this.on(wrap, 'pointerleave', () => {
       wrap.classList.remove('hovered');
       rect.setAttribute('stroke', 'rgba(255,255,255,0.72)');
       rect.style.filter = '';
@@ -1416,4 +1420,4 @@ export class Chapitre1Scene extends Scene {
     if (immediate) clearFn();
     else setTimeout(clearFn, 700);
   }
-}
+      }
