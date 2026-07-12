@@ -108,7 +108,7 @@ export class SkipButton {
     wrap.style.height = H + 'px';
 
     // Hover entrée : accentuation dorée.
-    wrap.addEventListener('mouseenter', () => {
+    wrap.addEventListener('pointerenter', () => {
       wrap.classList.add('hovered');
       rect.setAttribute('stroke', 'rgba(255,230,130,0.95)');
       rect.style.filter =
@@ -117,7 +117,7 @@ export class SkipButton {
     });
 
     // Hover sortie : retour à l'état neutre.
-    wrap.addEventListener('mouseleave', () => {
+    wrap.addEventListener('pointerleave', () => {
       wrap.classList.remove('hovered');
       rect.setAttribute('stroke', 'rgba(255,255,255,0.72)');
       rect.style.filter = '';
