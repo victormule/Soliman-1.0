@@ -39,7 +39,7 @@ if (appEl) {
 /* ── 2. Curseur personnalisé ──────────────────────────────────── */
 const cursorEl = document.getElementById('cursor');
 if (cursorEl) {
-  document.addEventListener('mousemove', e => {
+  document.addEventListener('pointermove', e => {
     cursorEl.style.left = e.clientX + 'px';
     cursorEl.style.top  = e.clientY + 'px';
   }, { passive: true });
