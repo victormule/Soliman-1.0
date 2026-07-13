@@ -1243,20 +1243,50 @@ function doUnzoom(eye) {
   }, UNZOOM_DUR + 200);
 }
 
+// Détection tactile (une fois) : sur tactile, le clic sur un œil ne peut pas
+// s'appuyer sur l'état 'play' progressif (le doigt se pose directement sur
+// l'œil sans la phase d'approche). On autorise alors le zoom si le point touché
+// est à portée (rayon R_CLOSE), en forçant l'état au passage.
+const _isTouch = window.matchMedia?.('(pointer: coarse)').matches
+              || 'ontouchstart' in window;
+
+/** True si (mouseX,mouseY) est dans le rayon de déclenchement de l'œil. */
+function _pointerWithinEye(eye) {
+  const sx = rect.oX + rect.rW * eye.cx;
+  const sy = rect.oY + rect.rH * eye.cy;
+  const dx = mouseX - sx;
+  const dy = mouseY - sy;
+  const dim = Math.min(rect.vw, rect.vh);
+  const rCloseSq = (dim * R_CLOSE) ** 2;
+  return mouseOnPage && (dx * dx + dy * dy) < rCloseSq;
+}
+
+/** Peut-on zoomer cet œil au clic ? (souris : état 'play' ; tactile : proximité) */
+function _canZoomOnClick(eye) {
+  if (zoomed || isReturning()) return false;
+  if (eye.state === 'play') return true;
+  // Tactile : le doigt est posé sur/près de l'œil → on force play puis zoom.
+  if (_isTouch && _pointerWithinEye(eye)) {
+    if (eye.state !== 'play') doEnterPlay(eye);
+    return true;
+  }
+  return false;
+}
+
 eye1.wEl.addEventListener('click', () => {
-  if (eye1.state === 'play' && !zoomed && !isReturning()) doZoom(eye1);
+  if (_canZoomOnClick(eye1)) doZoom(eye1);
 });
 
 eye2.wEl.addEventListener('click', () => {
-  if (eye2.state === 'play' && !zoomed && !isReturning()) doZoom(eye2);
+  if (_canZoomOnClick(eye2)) doZoom(eye2);
 });
 
 eye3.wEl.addEventListener('click', () => {
-  if (eye3.state === 'play' && !zoomed && !isReturning()) doZoom(eye3);
+  if (_canZoomOnClick(eye3)) doZoom(eye3);
 });
 
 eye4.wEl.addEventListener('click', () => {
-  if (eye4.state === 'play' && !zoomed && !isReturning()) doZoom(eye4);
+  if (_canZoomOnClick(eye4)) doZoom(eye4);
 });
 
 btnClose.addEventListener('click', () => {
@@ -1304,15 +1334,22 @@ let mouseY      = -99999;
 let mouseOnPage = false;
 let mouseDirty  = false;
 
-on(document, 'mousemove', e => {
+// Position du pointeur : pilote la proximité des yeux (réveil/play/tremble).
+// pointermove couvre souris ET tactile ; pointerdown capte le premier contact
+// (au tactile, aucun move n'est émis tant que le doigt n'a pas touché l'écran).
+function _onPointerPos(e) {
   mouseX = e.clientX;
   mouseY = e.clientY;
   mouseOnPage = true;
   mouseDirty  = true;
   wakeRAF();
-}, { passive: true });
+}
+on(document, 'pointermove', _onPointerPos, { passive: true });
+on(document, 'pointerdown', _onPointerPos, { passive: true });
 
-on(document, 'mouseleave', () => {
+// Fin de contact tactile ou sortie de page : les yeux se rendorment.
+// (pointerup/cancel pour le tactile ; pointerleave sur document pour la souris.)
+function _onPointerAway() {
   mouseOnPage = false;
   mouseDirty  = true;
   if (zoomed) return;
@@ -1323,7 +1360,10 @@ on(document, 'mouseleave', () => {
     if (eye.state === 'awake' || eye.state === 'play') doSleep(eye);
   }
   wakeRAF();
-});
+}
+on(document, 'pointerup',     _onPointerAway, { passive: true });
+on(document, 'pointercancel', _onPointerAway, { passive: true });
+on(document, 'pointerleave',  _onPointerAway, { passive: true });
 
 let _resizeTimer = null;
 
